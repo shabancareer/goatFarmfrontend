@@ -23,7 +23,7 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <Provider store={store}>
-        {isFetching > 0 && <div className="top-loader bg-red-500" />}
+        {isFetching > 0 && <div className="top-loader bg-red-700" />}
         <App />
         <ReactQueryDevtools initialIsOpen={false} />
       </Provider>
