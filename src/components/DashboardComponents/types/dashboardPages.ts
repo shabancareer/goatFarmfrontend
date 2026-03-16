@@ -1,0 +1,15 @@
+export type DashboardPages =
+    | "Tag Change"
+    | "Manage Breeding"
+    | "Manage Weight"
+    | "Manage Expense Type"
+    | "Manage Breed"
+    | "Manage Medicine"
+    | "Manage Disease"
+    | "Manage Farmer"
+    | "Manage Customer"
+    | "Manage City"
+    | "Manage Bank"
+    | "Herd"
+    | "Manage Animal"
+    | "HerdManagement";
