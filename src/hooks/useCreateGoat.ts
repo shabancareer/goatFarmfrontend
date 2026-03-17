@@ -9,7 +9,7 @@ export const useCreateGoat = () => {
             // You can add a success toast here
         },
         onError: (error: any) => {
-            console.error('❌ Error creating goat:', error.response?.data?.message || error.message);
+            console.error('Error creating goat:', error.response?.data?.message || error.message);
             // You can add an error toast here
         },
     });

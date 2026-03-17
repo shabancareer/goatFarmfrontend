@@ -16,14 +16,14 @@ import './App.css'
 import App from './App.tsx'
 
 const queryClient = new QueryClient()
-const isFetching = useIsFetching();
+// const isFetching = useIsFetching();
 
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <Provider store={store}>
-        {isFetching > 0 && <div className="top-loader bg-red-700" />}
+        {/* {isFetching > 0 && <div className="top-loader bg-red-700" />} */}
         <App />
         <ReactQueryDevtools initialIsOpen={false} />
       </Provider>
