@@ -6,7 +6,6 @@ import EditIcon from '@mui/icons-material/Edit';
 import { useForm } from 'react-hook-form';
 import { useCreateGoat } from '@/hooks/useCreateGoat';
 // import { AnimalInterface } from '@/components/DashboardComponents/MasterEntryComponents/Interfaces/AnimalInterface';
-
 interface FormData {
     animalName: string;
     gender: string;
@@ -28,6 +27,8 @@ interface FormData {
 
 const AddAnimalForm = () => {
     const [showModal, setShowModal] = useState(false);
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
     const createGoat = useCreateGoat();
     const {
         register,
@@ -59,7 +60,6 @@ const AddAnimalForm = () => {
 
     const gender = watch('gender');
     const purchaseType = watch('purchaseType');
-
     const onSubmit = async (data: FormData) => {
         try {
             // Transform data for API
@@ -95,16 +95,31 @@ const AddAnimalForm = () => {
     };
 
     return (
-        <div className="manage-animal-bg">
-            <form onSubmit={handleSubmit(onSubmit)} className="p-10 rounded-lg shadow">
-                <h2 className="text-xl font-semibold mb-4">Add Animal</h2>
-                <Separator />
+
+        <div className="manage-animal-bg w-full h-full">
+            <div className="p-4 flex flex-col items-center">
+                <div className="flex flex-col gap-1">
+                    <h2 className="text-2xl my-2 font-bold">Manage Animal</h2>
+                    <Separator />
+                </div>
+            </div>
+            <button
+                onClick={() => setShowModal(true)}
+                className="bg-blue-500 hover:bg-blue-600 cursor-pointer text-white font-bold py-2 px-4 mx-3 rounded">Add Animal</button>
+            {showModal && (<form onSubmit={handleSubmit(onSubmit)} className="p-10 absolute w-full rounded-lg shadow">
+
                 {createGoat.isError && (
                     <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
                         Error: {createGoat.error?.response?.data?.message || 'Failed to add goat'}
                     </div>
                 )}
-                <div className="grid grid-cols-2 gap-2 my-5 border border-2 w-1/2 rounded-lg mx-auto bg-white/50">
+                <div className="grid grid-cols-2 gap-2 border border-2 w-1/2 rounded-lg mx-auto bg-white shadow-lg p-8">
+                    <button
+                        onClick={() => setShowModal(false)}
+                        className="absolute right-150 bg-blue-500 hover:bg-blue-600 cursor-pointer text-white rounded-md"
+                    >
+                        <X />
+                    </button>
                     {/* Animal Name */}
                     <div className="flex flex-col justify-center p-3">
                         <label htmlFor="animalName" className="font-medium">Animal Name *</label>
@@ -372,18 +387,80 @@ const AddAnimalForm = () => {
                             <span className="text-red-500 text-xs mt-1">{errors.purchaseFrom.message}</span>
                         )}
                     </div>
+                    <button
+                        type="submit"
+                        disabled={createGoat.isPending || isSubmitting}
+                        className={`mt-4 bg-blue-500 relative left-1/2 mx-auto w-1/2 hover:bg-blue-600 cursor-pointer text-white p-3 rounded-md font-medium ${createGoat.isPending ? 'opacity-50 cursor-not-allowed' : ''
+                            }`}
+                    >
+                        {createGoat.isPending ? 'Saving...' : 'Save'}
+                    </button>
                 </div>
 
-                <button
-                    type="submit"
-                    disabled={createGoat.isPending || isSubmitting}
-                    className={`mt-4 w-full bg-blue-500 hover:bg-blue-600 cursor-pointer text-white py-3 rounded font-medium ${createGoat.isPending ? 'opacity-50 cursor-not-allowed' : ''
-                        }`}
-                >
-                    {createGoat.isPending ? 'Saving...' : 'Save'}
-                </button>
             </form>
+            )}
+            <div className="mx-2 mt-4 bg-white w-full">
+                <div className="flex flex-row gap-3 m-2 rounded-md p-8 w-1/4">
+                    <div className="">
+                        <label className="text-xl font-bold" htmlFor="startDate">Start Date:</label>
+                        <input className="border border-gray-300 hover:border-gray-500 rounded-md p-10" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                    </div>
+                    <div>
+                        <label className="text-xl font-bold" htmlFor="endDate">End Date:</label>
+                        <input className="border border-gray-300 hover:border-gray-500 rounded-md p-10" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+                    </div>
+                    {/* <button onClick={() => fetchAnimals()}>Filter</button> */}
+                </div>
+                <div className="flex justify-between items-center">
+                    <h2 className="text-2xl my-2 font-bold">Animal List</h2>
+                </div>
+                <Separator />
+                <table className="w-full border border-gray-300 border-collapse">
+                    <thead className="bg-gray-100">
+                        <tr>
+                            <th className="border border-gray-300 p-2">Sr#</th>
+                            <th className="border border-gray-300 p-2">Date</th>
+                            <th className="border border-gray-300 p-2">Tag ID</th>
+                            <th className="border border-gray-300 p-2">Gender</th>
+                            <th className="border border-gray-300 p-2">Initial Weight</th>
+                            <th className="border border-gray-300 p-2">Current Weight</th>
+                            <th className="border border-gray-300 p-2">DOB</th>
+                            <th className="border border-gray-300 p-2">Kidding Capacity</th>
+                            <th className="border border-gray-300 p-2">Animal Type</th>
+                            <th className="border border-gray-300 p-2">Animal Name</th>
+                            <th className="border border-gray-300 p-2">Age Calculator</th>
+                            <th className="border border-gray-300 p-2">Mother ID</th>
+                            <th className="border border-gray-300 p-2">Father ID</th>
+                            <th className="border border-gray-300 p-2">Partition</th>
+                            <th className="border border-gray-300 p-2">Site</th>
+                            <th className="border border-gray-300 p-2">Purchase Type</th>
+                            <th className="border border-gray-300 p-2">Purchase Date</th>
+                            <th className="border border-gray-300 p-2">Purchase Price</th>
+                            <th className="border border-gray-300 p-2">Purchase From</th>
+                            <th className="border border-gray-300 p-2">Actions</th>
+                        </tr>
+                        <tr>
+                            <td>
+                                <button className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-sm">
+                                    Edit
+                                </button>
+
+                                <button className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">
+                                    Delete
+                                </button>
+                            </td>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {/* rows will come here */}
+                    </tbody>
+
+                </table>
+            </div>
         </div>
+
+
     );
 
 }
