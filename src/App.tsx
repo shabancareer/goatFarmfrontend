@@ -10,6 +10,7 @@ import Home from './components/home/home.tsx'
 import Dashboard from './components/DashboardComponents/mainDashboard.tsx'
 import AnimalPanel from "./components/ManageAnimal/AnimalPanel.tsx";
 import ManageGoats from "./features/manageGoats/manageGoats.tsx";
+import GeneralDashboard from "./components/DashboardComponents/generalDashboard.tsx";
 function App() {
 
   return (
@@ -18,6 +19,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          {/* <Route path="dashboard/generalDashboard" element={<GeneralDashboard />} /> */}
           <Route path="/dashboard/AnimalPanel" element={<AnimalPanel />} />
           <Route path="/dashboard/ManageGoats" element={<ManageGoats />} />
         </Routes>

@@ -459,10 +459,7 @@ const AddAnimalForm = () => {
                 </table>
             </div>
         </div>
-
-
     );
-
 }
 
 export default AddAnimalForm;

@@ -1,4 +1,5 @@
 export type DashboardPages =
+    | "General Dashboard"
     | "Tag Change"
     | "Manage Breeding"
     | "Manage Weight"
