@@ -10,7 +10,7 @@ import Home from './components/home/home.tsx'
 import Dashboard from './components/DashboardComponents/mainDashboard.tsx'
 import AnimalPanel from "./components/ManageAnimal/AnimalPanel.tsx";
 import ManageGoats from "./features/manageGoats/manageGoats.tsx";
-import GeneralDashboard from "./components/DashboardComponents/generalDashboard.tsx";
+import GeneralDashboard from "./components/DashboardComponents/general-dashboard/generalDashboard.tsx";
 function App() {
 
   return (

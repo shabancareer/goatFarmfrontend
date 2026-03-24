@@ -1,0 +1,10 @@
+export type GeneralDashboardPages =
+    | "Total Size"
+    | "Healthly Goats"
+    | "Sick Goats"
+    | "Pregnant Goats"
+    | "Feed Stock"
+    | "Profit This Month"
+    | "Kids Born This Month"
+    | "Goats Ready For Breeding"
+    | "Daily Feed Uses"

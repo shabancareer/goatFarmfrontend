@@ -134,57 +134,31 @@ body,
     @apply bg-background text-foreground;
   }
 }
-/* Goat Farm Sidebar Gradient */
-/* Goat Farming Sidebar Background */
-.goat-sidebar-bg {
+
+/* shared panel styles */
+.bg-panel {
   position: relative;
-  background-image: 
+  background-image:
     linear-gradient(
       180deg,
-      rgba(92, 51, 23, 0.85) 0%,     /* farm brown */
-      rgba(214, 170, 74, 0.75) 45%,  /* warm sunlight yellow */
-      rgba(86, 142, 60, 0.70) 100%   /* pasture green */
+      rgba(92, 51, 23, 0.85) 0%,   /* farm brown */
+      rgba(214, 170, 74, 0.75) 45%, /* warm sunlight yellow */
+      rgba(86, 142, 60, 0.70) 100%  /* pasture green */
     ),
-    url("../src/assets/goatsImgs/d-1.jpg");
+    var(--bg-image); /* background image controlled per panel */
 
   background-size: cover;
   background-position: 75%;
   background-repeat: no-repeat;
-  opacity: 1;
+  /* opacity: 0.5; */
 }
 
-/* optional soft blur glass effect */
-.goat-sidebar-bg::before {
-  content: "Shaban";
+/* configurable overlay */
+.bg-panel::before {
+  content: "";
   position: absolute;
   inset: 0;
-  /* backdrop-filter: blur(1px); */
-  background: rgba(0,0,0,0.15);
-  pointer-events: none;
-}
-.manage-animal-bg {
-  position: relative;
-  background-image: 
-    linear-gradient(
-      180deg,
-      rgba(255, 255, 255, 0.9) 0%,   /* white */
-      rgba(92, 51, 23, 0.8) 45%,     /* brown */
-      rgba(86, 142, 60, 0.75) 100%   /* green */
-    ),
-    url("../src/assets/goatsImgs/3.jpg");
-
-  background-size: cover;
-  background-position: 75%;
-  background-repeat: no-repeat;
-  /* opacity: 0.7; */
-}
-
-/* optional soft blur glass effect */
-.manage-animal-bg::before {
-  position: absolute;
-  inset: 0;
-  /* backdrop-filter: blur(1px); */
-  background: rgba(136, 151, 111, 0.15);
+  background: var(--overlay-color, rgba(197, 240, 67, 0.15)); /* default overlay if not set */
   pointer-events: none;
 }
 .child-cursor-pointer{

@@ -20,10 +20,12 @@ import FeedInventory from "./Feed-inventory"
 import SalesRevenue from "./Sales-revenue"
 import ReportsAnalysis from "./Reports-analysis"
 import AlertsNotifications from "./Alerts-notifications"
-import GeneralDashboard from "./generalDashboard"
+import GeneralDashboard from "./general-dashboard/generalDashboard"
 import type { DashboardPages } from "./types/dashboardPages"
 import Logout from "../profileComponents/logout"
 import ProfileSetting from "../profileComponents/profileSetting"
+// import "../styles/panel.css";
+import d1 from "../../assets/goatsImgs/d-1.jpg";
 // import ManageGoats from "../../features/manageGoats/manageGoats"
 
 
@@ -51,7 +53,13 @@ export default function Home() {
     return (
         <div className="w-full h-full flex flex-row">
             <div className="flex-[1] max-w-[16.6667%] h-full border-r-[4px] border-orange-300 flex flex-col justify-center overflow-y-hidden">
-                <div className="goat-sidebar-bg h-full w-full" >
+                <div className="bg-panel h-full w-full"
+                    style={{
+                        "--bg-image": `url(${d1})`,
+                        "--overlay-color": "rgba(0,0,0,0.2)"
+                    } as React.CSSProperties}
+
+                >
                     <div className="flex flex-col h-full mt-16 justify-start gap-6">
                         <button
                             className="bg-blue-500 hover:bg-blue-600 cursor-pointer text-white font-bold py-2 px-4 mx-3 rounded"
@@ -66,13 +74,14 @@ export default function Home() {
                         <AlertsNotifications />
                         <HerdManagement onNavigate={(page) => setActivePage(page)} />
                         <MasterEntry onNavigate={(page) => setActivePage(page)} />
-                        <div className="flex flex-col justify-center items-center h-full w-full gap-2 cursor-pointer">
-                            <ProfileSetting />
-                            <Logout />
+                        <div className="flex flex-col justify-center items-center h-full w-full gap-2">
+                            <div className="flex flex-col justify-center gap-2 cursor-pointer">
+                                <ProfileSetting />
+                                <Logout />
+                            </div>
                         </div>
                     </div>
                 </div>
-
             </div>
             <div className="w-5/6 h-full border-y-4 border-r-4 border-orange-300 bg-neutral-100">
                 {pages[activePage]}
