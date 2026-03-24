@@ -1,5 +1,5 @@
 import { useState, type JSX } from "react";
-import v1 from "../../../assets/goatvideos/generalDashboard.mp4";
+// import v1 from "../../../assets/goatvideos/generalDashboard.mp4";
 import type { GeneralDashboardPages } from "../types/GeneralDashboard";
 import SickGoats from "./SickGoats";
 import PregnantGoats from "./PregnantGoats";
@@ -23,78 +23,74 @@ export default function GeneralDashboard() {
         // other pages
     };
     return (
-        <div
-            className="bg-panel h-full w-full">
-            {/* <video
-                autoPlay
-                loop
-                muted
-                playsInline
-                className="absolute inset-0 w-full h-full object-cover blur-sm"
-            >
-                <source src={v1} type="video/mp4" />
-            </video> */}
-            {/* Overlay / content */}
-            <div className="flex flex-col h-full mt-16 justify-start gap-6">
+        <div className="bg-panel h-full w-full">
+
+            {/* LEFT SIDE BUTTONS */}
+            <div className="w-1/6 flex flex-col mt-16 gap-4">
+
                 <button
-                    className="bg-blue-500 hover:bg-blue-600 cursor-pointer text-white font-bold py-2 px-4 mx-3 rounded"
+                    className="bg-blue-500 hover:bg-blue-600 text-white py-2 mx-3 rounded"
                     onClick={() => setActivePage("Sick Goats")}
                 >
                     Sick Goats
                 </button>
+
                 <button
-                    className="bg-blue-500 hover:bg-blue-600 cursor-pointer text-white font-bold py-2 px-4 mx-3 rounded"
+                    className="bg-blue-500 hover:bg-blue-600 text-white py-2 mx-3 rounded"
                     onClick={() => setActivePage("Pregnant Goats")}
                 >
                     Pregnant Goats
                 </button>
+
                 <button
-                    className="bg-blue-500 hover:bg-blue-600 cursor-pointer text-white font-bold py-2 px-4 mx-3 rounded"
+                    className="bg-blue-500 hover:bg-blue-600 text-white py-2 mx-3 rounded"
                     onClick={() => setActivePage("Feed Stock")}
                 >
                     Feed Stock
                 </button>
+
                 <button
-                    className="bg-blue-500 hover:bg-blue-600 cursor-pointer text-white font-bold py-2 px-4 mx-3 rounded"
                     onClick={() => setActivePage("Profit This Month")}
+                    className="bg-blue-500 hover:bg-blue-600 text-white py-2 mx-3 rounded"
                 >
                     Profit This Month
                 </button>
+
                 <button
-                    className="bg-blue-500 hover:bg-blue-600 cursor-pointer text-white font-bold py-2 px-4 mx-3 rounded"
                     onClick={() => setActivePage("Kids Born This Month")}
+                    className="bg-blue-500 hover:bg-blue-600 text-white py-2 mx-3 rounded"
                 >
                     Kids Born This Month
                 </button>
+
                 <button
-                    className="bg-blue-500 hover:bg-blue-600 cursor-pointer text-white font-bold py-2 px-4 mx-3 rounded"
                     onClick={() => setActivePage("Goats Ready For Breeding")}
+                    className="bg-blue-500 hover:bg-blue-600 text-white py-2 mx-3 rounded"
                 >
                     Goats Ready For Breeding
                 </button>
+
                 <button
-                    className="bg-blue-500 hover:bg-blue-600 cursor-pointer text-white font-bold py-2 px-4 mx-3 rounded"
                     onClick={() => setActivePage("Daily Feed Uses")}
+                    className="bg-blue-500 hover:bg-blue-600 text-white py-2 mx-3 rounded"
                 >
                     Daily Feed Uses
                 </button>
 
-                {/* <HerdManagement onNavigate={(page) => setActivePage(page)} /> */}
-                {/* <GeneralDashboard onNavigate={(page) => setActivePage(page)} /> */}
-                <div className="flex flex-col justify-center items-center h-full w-full gap-2">
-                    <div className="flex flex-col justify-center gap-2 cursor-pointer">
+            </div>
 
-                    </div>
-                </div>
+
+            {/* RIGHT SIDE CONTENT */}
+            <div className="w-full h-full border-y-4 border-r-4 border-orange-300 bg-neutral-100">
+
+                {!activePage && (
+                    <h1 className="p-4 text-xl">General Dashboard</h1>
+                )}
+
+                {activePage && pages[activePage]}
+
             </div>
-            <div className="relative z-10 flex flex-col h-full w-full">
-                <h1 className="text-white text-3xl p-4">General Dashboard</h1>
-                <div className="w-5/6 h-full border-y-4 border-r-4 border-orange-300 bg-neutral-100">
-                    {activePage && pages[activePage]}
-                    {/* {!activePage && <GeneralDashboard />} */}
-                </div>
-                {/* Other dashboard components */}
-            </div>
+
         </div>
-    );
+    )
 }
