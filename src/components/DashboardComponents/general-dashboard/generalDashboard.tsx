@@ -1,5 +1,5 @@
 import { useState, type JSX } from "react";
-// import v1 from "../../../assets/goatvideos/generalDashboard.mp4";
+import v1 from "../../../assets/goatvideos/generalDashboard.mp4";
 import type { GeneralDashboardPages } from "../types/GeneralDashboard";
 import SickGoats from "./SickGoats";
 import PregnantGoats from "./PregnantGoats";
@@ -23,71 +23,76 @@ export default function GeneralDashboard() {
         // other pages
     };
     return (
-        <div className="bg-panel h-full w-full">
+        <div className="relative h-full w-full overflow-hidden">
+            {/* VIDEO BACKGROUND */}
+            <video
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="absolute inset-0 w-full h-full object-cover"
+            >
+                <source src={v1} type="video/mp4" />
+            </video>
 
-            {/* LEFT SIDE BUTTONS */}
-            <div className="w-1/6 flex flex-col mt-16 gap-4">
+            {/* DARK OVERLAY */}
+            <div className="absolute inset-0 bg-black/40"></div>
 
-                <button
-                    className="bg-blue-500 hover:bg-blue-600 text-white py-2 mx-3 rounded"
-                    onClick={() => setActivePage("Sick Goats")}
-                >
-                    Sick Goats
-                </button>
+            {/* GLASS PANEL CONTAINER */}
+            <div className="relative z-10 h-full w-full flex justify-center items-center">
 
-                <button
-                    className="bg-blue-500 hover:bg-blue-600 text-white py-2 mx-3 rounded"
-                    onClick={() => setActivePage("Pregnant Goats")}
-                >
-                    Pregnant Goats
-                </button>
+                <div
+                    className="backdrop-blur-md bg-white/10 shadow-xl rounded-xl flex flex-col gap-2 p-2">
+                    <button
+                        className="bg-blue-500/80 hover:bg-blue-600 text-white py-2 rounded"
+                        onClick={() => setActivePage("Sick Goats")}
+                    >
+                        Sick Goats
+                    </button>
 
-                <button
-                    className="bg-blue-500 hover:bg-blue-600 text-white py-2 mx-3 rounded"
-                    onClick={() => setActivePage("Feed Stock")}
-                >
-                    Feed Stock
-                </button>
+                    <button
+                        className="bg-blue-500/80 hover:bg-blue-600 text-white py-2 rounded"
+                        onClick={() => setActivePage("Pregnant Goats")}
+                    >
+                        Pregnant Goats
+                    </button>
 
-                <button
-                    onClick={() => setActivePage("Profit This Month")}
-                    className="bg-blue-500 hover:bg-blue-600 text-white py-2 mx-3 rounded"
-                >
-                    Profit This Month
-                </button>
+                    <button
+                        className="bg-blue-500/80 hover:bg-blue-600 text-white py-2 rounded"
+                        onClick={() => setActivePage("Feed Stock")}
+                    >
+                        Feed Stock
+                    </button>
 
-                <button
-                    onClick={() => setActivePage("Kids Born This Month")}
-                    className="bg-blue-500 hover:bg-blue-600 text-white py-2 mx-3 rounded"
-                >
-                    Kids Born This Month
-                </button>
+                    <button
+                        className="bg-blue-500/80 hover:bg-blue-600 text-white py-2 rounded"
+                        onClick={() => setActivePage("Profit This Month")}
+                    >
+                        Profit This Month
+                    </button>
 
-                <button
-                    onClick={() => setActivePage("Goats Ready For Breeding")}
-                    className="bg-blue-500 hover:bg-blue-600 text-white py-2 mx-3 rounded"
-                >
-                    Goats Ready For Breeding
-                </button>
+                    <button
+                        className="bg-blue-500/80 hover:bg-blue-600 text-white py-2 rounded"
+                        onClick={() => setActivePage("Kids Born This Month")}
+                    >
+                        Kids Born This Month
+                    </button>
 
-                <button
-                    onClick={() => setActivePage("Daily Feed Uses")}
-                    className="bg-blue-500 hover:bg-blue-600 text-white py-2 mx-3 rounded"
-                >
-                    Daily Feed Uses
-                </button>
+                    <button
+                        className="bg-blue-500/80 hover:bg-blue-600 text-white py-2 rounded"
+                        onClick={() => setActivePage("Goats Ready For Breeding")}
+                    >
+                        Goats Ready For Breeding
+                    </button>
 
-            </div>
+                    <button
+                        className="bg-blue-500/80 hover:bg-blue-600 text-white py-2 rounded"
+                        onClick={() => setActivePage("Daily Feed Uses")}
+                    >
+                        Daily Feed Uses
+                    </button>
 
-
-            {/* RIGHT SIDE CONTENT */}
-            <div className="w-full h-full border-y-4 border-r-4 border-orange-300 bg-neutral-100">
-
-                {!activePage && (
-                    <h1 className="p-4 text-xl">General Dashboard</h1>
-                )}
-
-                {activePage && pages[activePage]}
+                </div>
 
             </div>
 
