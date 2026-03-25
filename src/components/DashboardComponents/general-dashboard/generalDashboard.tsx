@@ -8,6 +8,7 @@ import ProfitThisMonth from "./ProfitThisMonth";
 import KidsBornThisMonth from "./KidsBornThisMonth";
 import GoatsReadyForBreeding from "./GoatsReadyForBreeding";
 import DailyFeedUses from "./DailyFeedUses";
+
 export default function GeneralDashboard() {
     // const navigate = useNavigate();
     const [activePage, setActivePage] = useState<GeneralDashboardPages>()
@@ -39,61 +40,48 @@ export default function GeneralDashboard() {
             <div className="absolute inset-0 bg-black/40"></div>
 
             {/* GLASS PANEL CONTAINER */}
-            <div className="relative z-10 h-full w-full flex justify-center items-center">
+            <div className="relative z-10 w-full">
+                <div className="backdrop-blur-md bg-white/10 shadow-xl my-2 p-3 rounded-md flex flex-row justify-around">
+                    <div className="grid grid-cols-7 gap-10 ">
+                        <SickGoats />
+                        <PregnantGoats />
+                        <FeedStock />
+                        <KidsBornThisMonth />
+                        <GoatsReadyForBreeding />
+                        <DailyFeedUses />
+                        <ProfitThisMonth />
+                    </div>
+                </div>
+                <div className="w-full h-full flex justify-center">
+                    <div className="grid grid-cols-3 gap-1 w-full h-screen">
 
-                <div
-                    className="backdrop-blur-md bg-white/10 shadow-xl rounded-xl flex flex-col gap-2 p-2">
-                    <button
-                        className="bg-blue-500/80 hover:bg-blue-600 text-white py-2 rounded"
-                        onClick={() => setActivePage("Sick Goats")}
-                    >
-                        Sick Goats
-                    </button>
+                        <div className="bg-white shadow col-span-2 flex items-center justify-center">
+                            Sick Goats
+                        </div>
+                        <div className=" rounded-xl shadow flex items-center justify-center">
+                            <div className="grid grid-col-2 gap-1 w-full h-full">
+                                <div className="flex items-center justify-center bg-orange-500">
+                                    Feed
+                                </div>
+                                <div className="flex items-center justify-center bg-green-500">
+                                    ffff
+                                </div>
+                            </div>
+                        </div>
 
-                    <button
-                        className="bg-blue-500/80 hover:bg-blue-600 text-white py-2 rounded"
-                        onClick={() => setActivePage("Pregnant Goats")}
-                    >
-                        Pregnant Goats
-                    </button>
+                        <div className="bg-white shadow col-span-2 flex items-center justify-center">
+                            Profit
+                        </div>
 
-                    <button
-                        className="bg-blue-500/80 hover:bg-blue-600 text-white py-2 rounded"
-                        onClick={() => setActivePage("Feed Stock")}
-                    >
-                        Feed Stock
-                    </button>
 
-                    <button
-                        className="bg-blue-500/80 hover:bg-blue-600 text-white py-2 rounded"
-                        onClick={() => setActivePage("Profit This Month")}
-                    >
-                        Profit This Month
-                    </button>
 
-                    <button
-                        className="bg-blue-500/80 hover:bg-blue-600 text-white py-2 rounded"
-                        onClick={() => setActivePage("Kids Born This Month")}
-                    >
-                        Kids Born This Month
-                    </button>
+                        <div className="bg-white shadow flex items-center justify-center">
+                            Breeding
+                        </div>
 
-                    <button
-                        className="bg-blue-500/80 hover:bg-blue-600 text-white py-2 rounded"
-                        onClick={() => setActivePage("Goats Ready For Breeding")}
-                    >
-                        Goats Ready For Breeding
-                    </button>
-
-                    <button
-                        className="bg-blue-500/80 hover:bg-blue-600 text-white py-2 rounded"
-                        onClick={() => setActivePage("Daily Feed Uses")}
-                    >
-                        Daily Feed Uses
-                    </button>
+                    </div>
 
                 </div>
-
             </div>
 
         </div>
