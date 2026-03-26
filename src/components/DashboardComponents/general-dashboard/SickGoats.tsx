@@ -1,8 +1,7 @@
 export default function SickGoats() {
     return (
         <div className=" bg-white
-    w-[120px] h-[120px]
-    rounded-xl
+    w-[200px] h-[100px]
     shadow-md
     flex
     items-center

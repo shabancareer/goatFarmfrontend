@@ -26,6 +26,50 @@ interface FormData {
 }
 
 const AddAnimalForm = () => {
+    const dummyAnimals = [
+        {
+            id: 1,
+            date: "2026-03-01",
+            tagId: "G101",
+            gender: "Female",
+            initialWeight: 12,
+            currentWeight: 25,
+            dob: "2025-10-01",
+            kidding: 2,
+            type: "Goat",
+            name: "Blacky",
+            age: "5 months",
+            mother: "M12",
+            father: "F08",
+            partition: "A",
+            site: "Farm 1",
+            purchaseType: "Bought",
+            purchaseDate: "2025-11-01",
+            price: 15000,
+            from: "Ali",
+        },
+        {
+            id: 2,
+            date: "2026-03-02",
+            tagId: "G102",
+            gender: "Male",
+            initialWeight: 15,
+            currentWeight: 30,
+            dob: "2025-09-15",
+            kidding: 0,
+            type: "Goat",
+            name: "Raja",
+            age: "6 months",
+            mother: "M10",
+            father: "F05",
+            partition: "B",
+            site: "Farm 1",
+            purchaseType: "Born",
+            purchaseDate: "-",
+            price: 0,
+            from: "-",
+        },
+    ];
     const [showModal, setShowModal] = useState(false);
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
@@ -439,23 +483,43 @@ const AddAnimalForm = () => {
                             <th className="border border-gray-300 p-2">Purchase From</th>
                             <th className="border border-gray-300 p-2">Actions</th>
                         </tr>
-                        <tr>
-                            <td>
-                                <button className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-sm">
-                                    Edit
-                                </button>
-
-                                <button className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">
-                                    Delete
-                                </button>
-                            </td>
-                        </tr>
                     </thead>
-
                     <tbody>
-                        {/* rows will come here */}
-                    </tbody>
+                        {dummyAnimals.map((a, i) => (
+                            <tr key={a.id} className="text-center">
 
+                                <td className="border p-1">{i + 1}</td>
+                                <td className="border p-1">{a.date}</td>
+                                <td className="border p-1">{a.tagId}</td>
+                                <td className="border p-1">{a.gender}</td>
+                                <td className="border p-1">{a.initialWeight}</td>
+                                <td className="border p-1">{a.currentWeight}</td>
+                                <td className="border p-1">{a.dob}</td>
+                                <td className="border p-1">{a.kidding}</td>
+                                <td className="border p-1">{a.type}</td>
+                                <td className="border p-1">{a.name}</td>
+                                <td className="border p-1">{a.age}</td>
+                                <td className="border p-1">{a.mother}</td>
+                                <td className="border p-1">{a.father}</td>
+                                <td className="border p-1">{a.partition}</td>
+                                <td className="border p-1">{a.site}</td>
+                                <td className="border p-1">{a.purchaseType}</td>
+                                <td className="border p-1">{a.purchaseDate}</td>
+                                <td className="border p-1">{a.price}</td>
+                                <td className="border p-1">{a.from}</td>
+
+                                <td className="border p-1">
+                                    <button className="bg-blue-500 text-white px-2 py-1 rounded mr-1">
+                                        Edit
+                                    </button>
+                                    <button className="bg-red-500 text-white px-2 py-1 rounded">
+                                        Delete
+                                    </button>
+                                </td>
+
+                            </tr>
+                        ))}
+                    </tbody>
                 </table>
             </div>
         </div>

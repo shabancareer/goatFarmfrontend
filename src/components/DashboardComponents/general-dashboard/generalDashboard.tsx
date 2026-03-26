@@ -24,7 +24,7 @@ export default function GeneralDashboard() {
         // other pages
     };
     return (
-        <div className="relative h-full w-full overflow-hidden">
+        <div className="relative h-full w-full overflow-hidden mb-10">
             {/* VIDEO BACKGROUND */}
             <video
                 autoPlay
@@ -41,8 +41,8 @@ export default function GeneralDashboard() {
 
             {/* GLASS PANEL CONTAINER */}
             <div className="relative z-10 w-full">
-                <div className="backdrop-blur-md bg-white/10 shadow-xl my-2 p-3 rounded-md flex flex-row justify-around">
-                    <div className="grid grid-cols-7 gap-10 ">
+                <div className="backdrop-blur-md bg-white/10 shadow-xl mb-1 p-2">
+                    <div className="grid grid-cols-7 gap-2 ">
                         <SickGoats />
                         <PregnantGoats />
                         <FeedStock />
@@ -52,38 +52,48 @@ export default function GeneralDashboard() {
                         <ProfitThisMonth />
                     </div>
                 </div>
-                <div className="w-full h-full flex justify-center">
-                    <div className="grid grid-cols-3 gap-1 w-full h-screen">
-
-                        <div className="bg-white shadow col-span-2 flex items-center justify-center">
+                <div className="w-full h-screen flex justify-center">
+                    <div className="grid grid-cols-3 gap-2 w-full">
+                        <div className="bg-white shadow flex items-center justify-center">
                             Sick Goats
                         </div>
-                        <div className=" rounded-xl shadow flex items-center justify-center">
-                            <div className="grid grid-col-2 gap-1 w-full h-full">
-                                <div className="flex items-center justify-center bg-orange-500">
-                                    Feed
+                        <div className="shadow flex items-center justify-center">
+                            <div className="grid grid-rows-[80%_20%] gap-1 w-full h-full">
+                                <div className="flex flex-col items-center justify-center bg-orange-500">
+                                    <div>1</div>
                                 </div>
-                                <div className="flex items-center justify-center bg-green-500">
-                                    ffff
+                                <div className="flex flex-row gap-1 items-center justify-center bg-green-500">
+                                    <div>1</div>
+                                    <div>2</div>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="bg-white shadow col-span-2 flex items-center justify-center">
+                        <div className=" rounded-xl shadow flex items-center justify-center">
+                            <div className="grid grid-rows-[60%_40%] gap-1 w-full h-full">
+                                <div className="flex flex-col items-center justify-center bg-orange-500">
+                                    <div>1</div>
+                                    <div>2</div>
+                                    <div>3</div>
+                                </div>
+                                <div className="flex flex-col items-center justify-center bg-green-500">
+                                    <div>1</div>
+                                    <div>2</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="bg-white shadow flex items-center justify-center">
                             Profit
                         </div>
-
-
-
+                        <div className="bg-white shadow flex items-center justify-center">
+                            Profit
+                        </div>
                         <div className="bg-white shadow flex items-center justify-center">
                             Breeding
                         </div>
-
                     </div>
-
                 </div>
             </div>
-
         </div>
     )
 }
