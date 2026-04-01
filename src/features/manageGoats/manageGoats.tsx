@@ -3,7 +3,7 @@ import { useAppDispatch, useAppSelector } from '../../reduxHooks/hooks'
 import { decrement, increment } from './manageGoatSlice'
 
 export default function ManageGoats() {
-    const count = useAppSelector((state) => state.manageGoat.value)
+    const count = useAppSelector((state) => state.manageGoat.allGoats)
     const dispatch = useAppDispatch()
     return (
         <div className='flex flex-col items-center justify-center h-screen'>

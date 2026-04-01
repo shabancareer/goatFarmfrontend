@@ -1,10 +1,15 @@
-import { api } from "./api";
+import { CloudCog } from "lucide-react";
+import { api } from "./goatApi";
 
-const API_BASE_URL = 'http://localhost:3000/api/goats'; // Update with your backend URL
-
-const api = axios.create({
-    baseURL: API_BASE_URL,
-    headers: {
-        'Content-Type': 'application/json',
+export const goatService = {
+    // Create new goat
+    createGoat: async (goatData: any) => {
+        const response = await api.post('/goats', goatData);
+        return response.data;
     },
-});
+};
+
+export const getAllGoats = async () => {
+    const res = await api.get("/goats");
+    return res.data;
+};

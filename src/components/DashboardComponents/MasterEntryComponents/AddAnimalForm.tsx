@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { Separator } from "@/components/ui/separator"
 import { X } from "lucide-react";
+import Alert from '@mui/material/Alert';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import { useForm } from 'react-hook-form';
-import { useCreateGoat } from '@/hooks/useCreateGoat';
+import { useCreateGoat, useGetAllGoats } from '@/hooks/useCreateGoat';
 // import { AnimalInterface } from '@/components/DashboardComponents/MasterEntryComponents/Interfaces/AnimalInterface';
 interface FormData {
     animalName: string;
@@ -26,50 +27,7 @@ interface FormData {
 }
 
 const AddAnimalForm = () => {
-    const dummyAnimals = [
-        {
-            id: 1,
-            date: "2026-03-01",
-            tagId: "G101",
-            gender: "Female",
-            initialWeight: 12,
-            currentWeight: 25,
-            dob: "2025-10-01",
-            kidding: 2,
-            type: "Goat",
-            name: "Blacky",
-            age: "5 months",
-            mother: "M12",
-            father: "F08",
-            partition: "A",
-            site: "Farm 1",
-            purchaseType: "Bought",
-            purchaseDate: "2025-11-01",
-            price: 15000,
-            from: "Ali",
-        },
-        {
-            id: 2,
-            date: "2026-03-02",
-            tagId: "G102",
-            gender: "Male",
-            initialWeight: 15,
-            currentWeight: 30,
-            dob: "2025-09-15",
-            kidding: 0,
-            type: "Goat",
-            name: "Raja",
-            age: "6 months",
-            mother: "M10",
-            father: "F05",
-            partition: "B",
-            site: "Farm 1",
-            purchaseType: "Born",
-            purchaseDate: "-",
-            price: 0,
-            from: "-",
-        },
-    ];
+    const { data: goats, isLoading, isError } = useGetAllGoats();
     const [showModal, setShowModal] = useState(false);
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
@@ -131,8 +89,8 @@ const AddAnimalForm = () => {
 
             await createGoat.mutateAsync(goatData);
             reset(); // Reset form on success
-            alert('✅ Goat added successfully!');
-
+            setShowModal(false)
+            alert('Goat added successfully!');
         } catch (error) {
             console.error('Failed to add goat:', error);
         }
@@ -459,68 +417,72 @@ const AddAnimalForm = () => {
                     <h2 className="text-2xl my-2 font-bold">Animal List</h2>
                 </div>
                 <Separator />
-                <table className="w-full border border-gray-300 border-collapse">
-                    <thead className="bg-gray-100">
-                        <tr>
-                            <th className="border border-gray-300 p-2">Sr#</th>
-                            <th className="border border-gray-300 p-2">Date</th>
-                            <th className="border border-gray-300 p-2">Tag ID</th>
-                            <th className="border border-gray-300 p-2">Gender</th>
-                            <th className="border border-gray-300 p-2">Initial Weight</th>
-                            <th className="border border-gray-300 p-2">Current Weight</th>
-                            <th className="border border-gray-300 p-2">DOB</th>
-                            <th className="border border-gray-300 p-2">Kidding Capacity</th>
-                            <th className="border border-gray-300 p-2">Animal Type</th>
-                            <th className="border border-gray-300 p-2">Animal Name</th>
-                            <th className="border border-gray-300 p-2">Age Calculator</th>
-                            <th className="border border-gray-300 p-2">Mother ID</th>
-                            <th className="border border-gray-300 p-2">Father ID</th>
-                            <th className="border border-gray-300 p-2">Partition</th>
-                            <th className="border border-gray-300 p-2">Site</th>
-                            <th className="border border-gray-300 p-2">Purchase Type</th>
-                            <th className="border border-gray-300 p-2">Purchase Date</th>
-                            <th className="border border-gray-300 p-2">Purchase Price</th>
-                            <th className="border border-gray-300 p-2">Purchase From</th>
-                            <th className="border border-gray-300 p-2">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {dummyAnimals.map((a, i) => (
-                            <tr key={a.id} className="text-center">
-
-                                <td className="border p-1">{i + 1}</td>
-                                <td className="border p-1">{a.date}</td>
-                                <td className="border p-1">{a.tagId}</td>
-                                <td className="border p-1">{a.gender}</td>
-                                <td className="border p-1">{a.initialWeight}</td>
-                                <td className="border p-1">{a.currentWeight}</td>
-                                <td className="border p-1">{a.dob}</td>
-                                <td className="border p-1">{a.kidding}</td>
-                                <td className="border p-1">{a.type}</td>
-                                <td className="border p-1">{a.name}</td>
-                                <td className="border p-1">{a.age}</td>
-                                <td className="border p-1">{a.mother}</td>
-                                <td className="border p-1">{a.father}</td>
-                                <td className="border p-1">{a.partition}</td>
-                                <td className="border p-1">{a.site}</td>
-                                <td className="border p-1">{a.purchaseType}</td>
-                                <td className="border p-1">{a.purchaseDate}</td>
-                                <td className="border p-1">{a.price}</td>
-                                <td className="border p-1">{a.from}</td>
-
-                                <td className="border p-1">
-                                    <button className="bg-blue-500 text-white px-2 py-1 rounded mr-1">
-                                        Edit
-                                    </button>
-                                    <button className="bg-red-500 text-white px-2 py-1 rounded">
-                                        Delete
-                                    </button>
-                                </td>
-
+                <div className="max-h-[500px] overflow-y-auto">
+                    <table className="w-full border border-gray-300 border-collapse">
+                        <thead className="bg-gray-100">
+                            <tr>
+                                <th className="border border-gray-300 p-2">Sr#</th>
+                                <th className="border border-gray-300 p-2">Date</th>
+                                <th className="border border-gray-300 p-2">Tag ID</th>
+                                <th className="border border-gray-300 p-2">Gender</th>
+                                <th className="border border-gray-300 p-2">Weight</th>
+                                {/* <th className="border border-gray-300 p-2">Current Weight</th> */}
+                                <th className="border border-gray-300 p-2">DOB</th>
+                                <th className="border border-gray-300 p-2">Kidding Capacity</th>
+                                <th className="border border-gray-300 p-2">Animal Type</th>
+                                <th className="border border-gray-300 p-2">Animal Name</th>
+                                <th className="border border-gray-300 p-2">Age Calculator</th>
+                                <th className="border border-gray-300 p-2">Mother ID</th>
+                                <th className="border border-gray-300 p-2">Father ID</th>
+                                <th className="border border-gray-300 p-2">Partition</th>
+                                <th className="border border-gray-300 p-2">Site</th>
+                                <th className="border border-gray-300 p-2">Purchase Type</th>
+                                <th className="border border-gray-300 p-2">Purchase Date</th>
+                                <th className="border border-gray-300 p-2">Purchase Price</th>
+                                <th className="border border-gray-300 p-2">Purchase From</th>
+                                <th className="border border-gray-300 p-2">Actions</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+
+                        <tbody className="overflow-y-scroll">
+                            {goats?.data?.map((a: any, i: number) => (
+                                <tr key={a.id} className="text-center">
+
+                                    <td className="border p-1">{i + 1}</td>
+                                    <td className="border p-1">{a.date}</td>
+                                    <td className="border p-1">{a.tagId}</td>
+                                    <td className="border p-1">{a.gender}</td>
+                                    <td className="border p-1">{a.weight}</td>
+                                    {/* <td className="border p-1">{a.currentWeight}</td> */}
+                                    <td className="border p-1">{a.dob}</td>
+                                    <td className="border p-1">{a.kiddingCapacity}</td>
+                                    <td className="border p-1">{a.type}</td>
+                                    <td className="border p-1">{a.animalName}</td>
+                                    <td className="border p-1">{a.age}</td>
+                                    <td className="border p-1">{a.motherId}</td>
+                                    <td className="border p-1">{a.fatherId}</td>
+                                    <td className="border p-1">{a.partition}</td>
+                                    <td className="border p-1">{a.site}</td>
+                                    <td className="border p-1">{a.purchaseType}</td>
+                                    <td className="border p-1">{a.purchaseDate}</td>
+                                    <td className="border p-1">{a.purchasePrice}</td>
+                                    <td className="border p-1">{a.purchaseFram}</td>
+
+                                    <td className="border p-1">
+                                        <button className="bg-blue-500 text-white px-2 py-1 rounded mr-1">
+                                            Edit
+                                        </button>
+                                        <button className="bg-red-500 text-white px-2 py-1 rounded">
+                                            Delete
+                                        </button>
+                                    </td>
+
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+
             </div>
         </div>
     );

@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:3000/api/'; // Update with your backend URL
+const API_BASE_URL = 'http://localhost:3000/'; // Update with your backend URL
 
 export const api = axios.create({
     baseURL: API_BASE_URL,
@@ -9,13 +9,13 @@ export const api = axios.create({
     },
 });
 
-export const goatApi = {
-    // Create new goat
-    createGoat: async (goatData: any) => {
-        const response = await api.post('/goats', goatData);
-        return response.data;
-    },
-};
+// export const goatApi = {
+//     // Create new goat
+//     createGoat: async (goatData: any) => {
+//         const response = await api.post('/goats', goatData);
+//         return response.data;
+//     },
+// };
 
 // Request interceptor for API calls
 // api.interceptors.request.use(
