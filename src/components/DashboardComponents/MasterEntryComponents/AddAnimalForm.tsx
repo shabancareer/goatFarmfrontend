@@ -4,9 +4,13 @@ import { X } from "lucide-react";
 import Alert from '@mui/material/Alert';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+
 import { useForm } from 'react-hook-form';
-import { useCreateGoat, useGetAllGoats } from '@/hooks/useCreateGoat';
+import { useCreateGoat, useGetAllGoats, useDeleteGoat } from '@/hooks/useCreateGoat';
 // import { AnimalInterface } from '@/components/DashboardComponents/MasterEntryComponents/Interfaces/AnimalInterface';
+
 interface FormData {
     animalName: string;
     gender: string;
@@ -26,12 +30,33 @@ interface FormData {
     purchaseFrom: string;
 }
 
+const formatField = (value: number | string | null, isDate = false) => {
+    if (!value) return "-";
+    if (isDate) {
+        const date = new Date(value);
+        if (isNaN(date.getTime())) return value;
+
+        return date
+            .toLocaleDateString("en-GB", {
+                day: "numeric",
+                month: "short",
+                year: "2-digit",
+            })
+            .replace(/ /g, "-");
+    }
+
+    return value;
+};
+
 const AddAnimalForm = () => {
     const { data: goats, isLoading, isError } = useGetAllGoats();
+    const totalGoats = goats?.data?.length || 0;
+    // console.log("TotalGoats:=", totalGoats);
     const [showModal, setShowModal] = useState(false);
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
     const createGoat = useCreateGoat();
+    const { mutate: deleteGoat } = useDeleteGoat();
     const {
         register,
         handleSubmit,
@@ -59,14 +84,94 @@ const AddAnimalForm = () => {
             purchaseFrom: ''
         }
     });
+    const handleExportPDF = () => {
+        const doc = new jsPDF();
+        // Table headers (same as your UI)
+        const tableColumn = [
+            "Sr#",
+            "Tag ID",
+            "Gender",
+            "Weight",
+            "Kidding Capacity",
+            "Animal Type",
+            "Animal Name",
+            "Age Calculator",
+            "Mother ID",
+            "Father ID",
+            "Partition",
+            "Site",
+            "Purchase Type",
+            "DOB",
+            "Purchase Date",
+            "Purchase Price",
+            "Purchase From"
+        ];
+        const tableRows: any[] = [];
+        goats?.data?.forEach((goat: any, index: number) => {
+            console.log("Goat:=", goat);
+            const row = [
+                index + 1,
+                goat.tagId,
+                goat.gender,
+                goat.weight,
+                goat.kiddingCapacity,
+                goat.type,
+                goat.animalName,
+                goat.age,
+                goat.motherId,
+                goat.fatherId,
+                goat.partition,
+                goat.site,
+                goat.purchaseType,
+                formatField(goat.dateOfBirth, true),
+                formatField(goat.dateOfPurchase, true),
+                goat.purchasePrice,
+                goat.purchaseFram
+            ];
+            tableRows.push(row);
+        });
+        autoTable(doc, {
+            head: [tableColumn],
+            body: tableRows,
+            startY: 20,
+            styles: {
+                fontSize: 6, // smaller for many columns
+                cellPadding: 2,
+                overflow: "linebreak",
+            },
+            headStyles: {
+                fillColor: [59, 130, 246], // blue header
+                textColor: 255,
+                halign: "center",
+            },
+            bodyStyles: {
+                halign: "center",
+            },
 
+            columnStyles: {
+                0: { cellWidth: 10 }, // Sr#
+                1: { cellWidth: 20 }, // Tag ID
+                6: { cellWidth: 25 }, // Name wider
+            },
+
+            theme: "grid", // ✅ adds proper borders
+            tableWidth: "auto",
+
+            margin: { top: 10, left: 5, right: 5 },
+
+            didDrawPage: (data) => {
+                doc.setFontSize(12);
+                doc.text("Goat Farm Report", data.settings.margin.left, 10);
+            },
+        });
+        doc.save("goats.pdf");
+    }
     const gender = watch('gender');
     const purchaseType = watch('purchaseType');
     const onSubmit = async (data: FormData) => {
         try {
             // Transform data for API
             const formattedType = data.type === 'buk' ? 'BUK' : data.type.charAt(0).toUpperCase() + data.type.slice(1);
-
             const goatData: any = {
                 animalName: data.animalName,
                 gender: data.gender,
@@ -97,7 +202,6 @@ const AddAnimalForm = () => {
     };
 
     return (
-
         <div className="manage-animal-bg w-full h-full">
             <div className="p-4 flex flex-col items-center">
                 <div className="flex flex-col gap-1">
@@ -108,7 +212,7 @@ const AddAnimalForm = () => {
             <button
                 onClick={() => setShowModal(true)}
                 className="bg-blue-500 hover:bg-blue-600 cursor-pointer text-white font-bold py-2 px-4 mx-3 rounded">Add Animal</button>
-            {showModal && (<form onSubmit={handleSubmit(onSubmit)} className="p-10 absolute w-full rounded-lg shadow">
+            {showModal && (<form onSubmit={handleSubmit(onSubmit)} className="p-10 absolute w-full rounded-lg shadow z-1">
 
                 {createGoat.isError && (
                     <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
@@ -118,7 +222,7 @@ const AddAnimalForm = () => {
                 <div className="grid grid-cols-2 gap-2 border border-2 w-1/2 rounded-lg mx-auto bg-white shadow-lg p-8">
                     <button
                         onClick={() => setShowModal(false)}
-                        className="absolute right-150 bg-blue-500 hover:bg-blue-600 cursor-pointer text-white rounded-md"
+                        className="w-10 h-10 mt-[-10px] mb-[-10px] flex items-center justify-center absolute right-180 bg-gradient-to-b from-blue-500 to-red-500 hover:from-red-500 hover:to-blue-500 cursor-pointer text-white rounded-md"
                     >
                         <X />
                     </button>
@@ -148,7 +252,7 @@ const AddAnimalForm = () => {
                             <option value="">Select Gender</option>
                             <option value="Male">Male</option>
                             <option value="Female">Female</option>
-                            <option value="Kid">Kid</option>
+                            {/* <option value="Kid">Kid</option> */}
                         </select>
                         {errors.gender && (
                             <span className="text-red-500 text-xs mt-1">{errors.gender.message}</span>
@@ -174,7 +278,7 @@ const AddAnimalForm = () => {
 
                     {/* Date of Birth */}
                     <div className="flex flex-col justify-center p-1">
-                        <label htmlFor="dateOfBirth" className="font-medium">Date of Birth *</label>
+                        <label htmlFor="dateOfBirth" className="font-medium">Date of Birth {purchaseType === 'own' ? '*' : ''}</label>
                         <input
                             id="dateOfBirth"
                             type="date"
@@ -191,7 +295,7 @@ const AddAnimalForm = () => {
 
                     {/* Date of Purchase */}
                     <div className="flex flex-col justify-center p-1">
-                        <label htmlFor="dateOfPurchase" className="font-medium">Date of Purchase *</label>
+                        <label htmlFor="dateOfPurchase" className="font-medium">Date of Purchase {purchaseType === 'purchase' ? '*' : ''}</label>
                         <input
                             id="dateOfPurchase"
                             type="date"
@@ -226,7 +330,7 @@ const AddAnimalForm = () => {
 
                     {/* Kidding Capacity */}
                     <div className="flex flex-col justify-center p-1">
-                        <label htmlFor="kiddingCapacity" className="font-medium">Kidding Capacity</label>
+                        <label htmlFor="kiddingCapacity" className="font-medium">Kidding Capacity {gender === 'Female' ? '*' : ''}</label>
                         <select
                             id="kiddingCapacity"
                             {...register('kiddingCapacity', {
@@ -355,33 +459,34 @@ const AddAnimalForm = () => {
 
                     {/* Purchase Price */}
                     <div className="flex flex-col justify-center p-1">
-                        <label htmlFor="purchasePrice" className="font-medium">Purchase Price</label>
+                        <label className="font-medium">Purchase Price {purchaseType === 'purchase' ? '*' : ''}</label>
                         <input
-                            id="purchasePrice"
                             type="number"
                             {...register('purchasePrice', {
                                 required: purchaseType === 'purchase' ? 'Purchase price is required' : false,
-                                min: { value: 0, message: 'Price cannot be negative' }
                             })}
                             disabled={purchaseType === "own"}
                             className={`border ${errors.purchasePrice ? 'border-red-500' : 'border-gray-300'} rounded-md p-2 disabled:bg-gray-200`}
                             placeholder="Purchase Price"
                         />
+
                         {errors.purchasePrice && (
-                            <span className="text-red-500 text-xs mt-1">{errors.purchasePrice.message}</span>
+                            <span className="text-red-500 text-xs mt-1">
+                                {errors.purchasePrice.message}
+                            </span>
                         )}
                     </div>
 
                     {/* Purchase From */}
                     <div className="flex flex-col justify-center p-1">
-                        <label htmlFor="purchaseFrom" className="font-medium">Purchase From</label>
+                        <label htmlFor="purchaseFrom" className="font-medium">Purchase From {purchaseType === 'purchase' ? '*' : ''}</label>
                         <input
+                            disabled={purchaseType === "own"}
                             id="purchaseFrom"
                             type="text"
                             {...register('purchaseFrom', {
                                 required: purchaseType === 'purchase' ? 'Seller name is required' : false
                             })}
-                            disabled={purchaseType === "own"}
                             className={`border ${errors.purchaseFrom ? 'border-red-500' : 'border-gray-300'} rounded-md p-2 disabled:bg-gray-200`}
                             placeholder="Purchase From"
                         />
@@ -402,7 +507,7 @@ const AddAnimalForm = () => {
             </form>
             )}
             <div className="mx-2 mt-4 bg-white w-full">
-                <div className="flex flex-row gap-3 m-2 rounded-md p-8 w-1/4">
+                <div className="flex  flex-row gap-3 m-2 rounded-md p-8 w-1/4">
                     <div className="">
                         <label className="text-xl font-bold" htmlFor="startDate">Start Date:</label>
                         <input className="border border-gray-300 hover:border-gray-500 rounded-md p-10" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
@@ -418,72 +523,109 @@ const AddAnimalForm = () => {
                 </div>
                 <Separator />
                 <div className="max-h-[500px] overflow-y-auto">
-                    <table className="w-full border border-gray-300 border-collapse">
-                        <thead className="bg-gray-100">
-                            <tr>
-                                <th className="border border-gray-300 p-2">Sr#</th>
-                                <th className="border border-gray-300 p-2">Date</th>
-                                <th className="border border-gray-300 p-2">Tag ID</th>
-                                <th className="border border-gray-300 p-2">Gender</th>
-                                <th className="border border-gray-300 p-2">Weight</th>
-                                {/* <th className="border border-gray-300 p-2">Current Weight</th> */}
-                                <th className="border border-gray-300 p-2">DOB</th>
-                                <th className="border border-gray-300 p-2">Kidding Capacity</th>
-                                <th className="border border-gray-300 p-2">Animal Type</th>
-                                <th className="border border-gray-300 p-2">Animal Name</th>
-                                <th className="border border-gray-300 p-2">Age Calculator</th>
-                                <th className="border border-gray-300 p-2">Mother ID</th>
-                                <th className="border border-gray-300 p-2">Father ID</th>
-                                <th className="border border-gray-300 p-2">Partition</th>
-                                <th className="border border-gray-300 p-2">Site</th>
-                                <th className="border border-gray-300 p-2">Purchase Type</th>
-                                <th className="border border-gray-300 p-2">Purchase Date</th>
-                                <th className="border border-gray-300 p-2">Purchase Price</th>
-                                <th className="border border-gray-300 p-2">Purchase From</th>
-                                <th className="border border-gray-300 p-2">Actions</th>
-                            </tr>
-                        </thead>
+                    {/* ✅ Loading */}
+                    {isLoading && (
+                        <div className="flex justify-center items-center h-40">
+                            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"></div>
+                        </div>
+                    )}
 
-                        <tbody className="overflow-y-scroll">
-                            {goats?.data?.map((a: any, i: number) => (
-                                <tr key={a.id} className="text-center">
+                    {/* ❌ Error */}
+                    {isError && (
+                        <div className="flex justify-center items-center h-40 text-red-500">
+                            Failed to load goats data ❌
+                        </div>
+                    )}
 
-                                    <td className="border p-1">{i + 1}</td>
-                                    <td className="border p-1">{a.date}</td>
-                                    <td className="border p-1">{a.tagId}</td>
-                                    <td className="border p-1">{a.gender}</td>
-                                    <td className="border p-1">{a.weight}</td>
-                                    {/* <td className="border p-1">{a.currentWeight}</td> */}
-                                    <td className="border p-1">{a.dob}</td>
-                                    <td className="border p-1">{a.kiddingCapacity}</td>
-                                    <td className="border p-1">{a.type}</td>
-                                    <td className="border p-1">{a.animalName}</td>
-                                    <td className="border p-1">{a.age}</td>
-                                    <td className="border p-1">{a.motherId}</td>
-                                    <td className="border p-1">{a.fatherId}</td>
-                                    <td className="border p-1">{a.partition}</td>
-                                    <td className="border p-1">{a.site}</td>
-                                    <td className="border p-1">{a.purchaseType}</td>
-                                    <td className="border p-1">{a.purchaseDate}</td>
-                                    <td className="border p-1">{a.purchasePrice}</td>
-                                    <td className="border p-1">{a.purchaseFram}</td>
-
-                                    <td className="border p-1">
-                                        <button className="bg-blue-500 text-white px-2 py-1 rounded mr-1">
-                                            Edit
-                                        </button>
-                                        <button className="bg-red-500 text-white px-2 py-1 rounded">
-                                            Delete
-                                        </button>
-                                    </td>
-
+                    {/* ✅ Table */}
+                    {!isLoading && !isError && (
+                        <table className="w-full border border-gray-300 border-collapse">
+                            <thead className="bg-blue-400 sticky top-0 z-0">
+                                <tr>
+                                    <th className="border p-2">Sr#</th>
+                                    <th className="border p-2">Tag ID</th>
+                                    <th className="border p-2">Gender</th>
+                                    <th className="border p-2">Weight</th>
+                                    <th className="border p-2">Kidding Capacity</th>
+                                    <th className="border p-2">Animal Type</th>
+                                    <th className="border p-2">Animal Name</th>
+                                    <th className="border p-2">Age</th>
+                                    <th className="border p-2">Mother ID</th>
+                                    <th className="border p-2">Father ID</th>
+                                    <th className="border p-2">Partition</th>
+                                    <th className="border p-2">Site</th>
+                                    <th className="border p-2">Purchase Type</th>
+                                    <th className="border p-2">DOB</th>
+                                    <th className="border p-2">Purchase Date</th>
+                                    <th className="border p-2">Purchase Price</th>
+                                    <th className="border p-2">Purchase From</th>
+                                    <th className="border p-2">Actions</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                            </thead>
+                            <tbody>
+                                {goats?.data?.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={18} className="text-center p-4 text-gray-500">
+                                            No goats found 🐐
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    goats?.data?.map((a: any, i: number) => (
+                                        <tr key={a.id} className="text-center">
 
+                                            <td className="border p-1">{i + 1}</td>
+                                            <td className="border p-1">{a.tagId}</td>
+                                            <td className="border p-1">{a.gender}</td>
+                                            <td className="border p-1">{a.weight}</td>
+                                            <td className="border p-1">{formatField(a.kiddingCapacity)}</td>
+                                            <td className="border p-1">{a.type}</td>
+                                            <td className="border p-1">{a.animalName}</td>
+                                            <td className="border p-1">{a.age}</td>
+                                            <td className="border p-1">{formatField(a.motherId)}</td>
+                                            <td className="border p-1">{formatField(a.fatherId)}</td>
+                                            <td className="border p-1">{a.partition}</td>
+                                            <td className="border p-1">{a.site}</td>
+                                            <td className="border p-1">{a.purchaseType}</td>
+                                            <td className="border p-1">{formatField(a.dateOfBirth, true)}</td>
+                                            <td className="border p-1">{formatField(a.purchaseDate, true)}</td>
+                                            <td className="border p-1">{formatField(a.purchasePrice)}</td>
+                                            <td className="border p-1">{formatField(a.purchaseFram)}</td>
+                                            <td className="border p-1">
+                                                <div className="flex items-center justify-center gap-2">
+
+                                                    <button className="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 cursor-pointer">
+                                                        Edit
+                                                    </button>
+
+                                                    {/* Vertical Separator */}
+                                                    {/* <div className="w-[2px] h-7 bg-blue-500"></div> */}
+                                                    <div className="w-[2px] h-7 bg-gradient-to-b from-blue-500 to-red-500"></div>
+                                                    <button
+                                                        onClick={() => deleteGoat(a.tagId)}
+                                                        className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 cursor-pointer"
+                                                    >
+                                                        Delete
+                                                    </button>
+
+                                                </div>
+                                            </td>
+
+
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    )}
+
+                </div>
             </div>
+            <div className="bg-white p-4 rounded shadow">
+                Total Goats: {totalGoats}
+            </div>
+            <button
+                onClick={handleExportPDF}
+                className="bg-blue-500 text-white px-2 py-1 rounded mr-1">Export</button>
         </div>
     );
 }

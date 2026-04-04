@@ -8,6 +8,7 @@ import ProfitThisMonth from "./ProfitThisMonth";
 import KidsBornThisMonth from "./KidsBornThisMonth";
 import GoatsReadyForBreeding from "./GoatsReadyForBreeding";
 import DailyFeedUses from "./DailyFeedUses";
+import TotalGoats from "./TotalSize";
 
 export default function GeneralDashboard() {
     // const navigate = useNavigate();
@@ -42,7 +43,8 @@ export default function GeneralDashboard() {
             {/* GLASS PANEL CONTAINER */}
             <div className="relative z-10 w-full">
                 <div className="backdrop-blur-md bg-white/10 shadow-xl mb-1 p-2">
-                    <div className="grid grid-cols-7 gap-2 ">
+                    <div className="grid grid-cols-8 gap-1 ">
+                        <TotalGoats />
                         <SickGoats />
                         <PregnantGoats />
                         <FeedStock />
