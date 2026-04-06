@@ -8,7 +8,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
 import { useForm } from 'react-hook-form';
-import { useCreateGoat, useGetAllGoats, useDeleteGoat } from '@/hooks/useCreateGoat';
+import { useCreateGoat, useGetAllGoats, useDeleteGoat, useUpdateGoat } from '@/hooks/useCreateGoat';
 // import { AnimalInterface } from '@/components/DashboardComponents/MasterEntryComponents/Interfaces/AnimalInterface';
 
 interface FormData {
@@ -55,7 +55,9 @@ const AddAnimalForm = () => {
     const [showModal, setShowModal] = useState(false);
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
+    const [editGoat, setEditGoat] = useState<any>(null);
     const createGoat = useCreateGoat();
+    const updateGoat = useUpdateGoat();
     const { mutate: deleteGoat } = useDeleteGoat();
     const {
         register,
@@ -170,12 +172,16 @@ const AddAnimalForm = () => {
     const purchaseType = watch('purchaseType');
     const onSubmit = async (data: FormData) => {
         try {
-            // Transform data for API
-            const formattedType = data.type === 'buk' ? 'BUK' : data.type.charAt(0).toUpperCase() + data.type.slice(1);
+            const formattedType =
+                data.type === "buk"
+                    ? "BUK"
+                    : data.type.charAt(0).toUpperCase() + data.type.slice(1);
+
             const goatData: any = {
                 animalName: data.animalName,
                 gender: data.gender,
-                purchaseType: data.purchaseType === 'purchase' ? 'Purchase' : 'Own',
+                purchaseType:
+                    data.purchaseType === "purchase" ? "Purchase" : "Own",
                 type: formattedType,
                 tagId: data.tagId,
                 weight: Number(data.weight) || 0,
@@ -190,15 +196,52 @@ const AddAnimalForm = () => {
 
             if (data.dateOfBirth) goatData.dateOfBirth = data.dateOfBirth;
             if (data.dateOfPurchase) goatData.purchaseDate = data.dateOfPurchase;
-            if (data.kiddingCapacity) goatData.kiddingCapacity = Number(data.kiddingCapacity);
+            if (data.kiddingCapacity)
+                goatData.kiddingCapacity = Number(data.kiddingCapacity);
 
-            await createGoat.mutateAsync(goatData);
-            reset(); // Reset form on success
-            setShowModal(false)
-            alert('Goat added successfully!');
+            if (editGoat) {
+                // ✅ UPDATE
+                await updateGoat.mutateAsync({
+                    id: editGoat.tagId,
+                    ...goatData,
+                });
+                alert("Goat updated successfully!");
+            } else {
+                // ✅ CREATE
+                await createGoat.mutateAsync(goatData);
+                alert("Goat added successfully!");
+            }
+
+            reset();
+            setShowModal(false);
+            setEditGoat(null);
+
         } catch (error) {
-            console.error('Failed to add goat:', error);
+            console.error("Error:", error);
         }
+    };
+    const handleEdit = (goat: any) => {
+        setEditGoat(goat);
+        setShowModal(true);
+        // populate form
+        reset({
+            animalName: goat.animalName,
+            gender: goat.gender,
+            purchaseType: goat.purchaseType?.toLowerCase(),
+            type: goat.type?.toLowerCase(),
+            tagId: goat.tagId,
+            weight: goat.weight,
+            breedType: goat.breedType,
+            motherId: goat.motherId,
+            fatherId: goat.fatherId,
+            partition: goat.partition,
+            site: goat.site,
+            purchasePrice: goat.purchasePrice,
+            purchaseFrom: goat.purchaseFram,
+            dateOfBirth: goat.dateOfBirth?.split("T")[0],
+            dateOfPurchase: goat.purchaseDate?.split("T")[0],
+            kiddingCapacity: goat.kiddingCapacity,
+        });
     };
 
     return (
@@ -496,11 +539,17 @@ const AddAnimalForm = () => {
                     </div>
                     <button
                         type="submit"
-                        disabled={createGoat.isPending || isSubmitting}
-                        className={`mt-4 bg-blue-500 relative left-1/2 mx-auto w-1/2 hover:bg-blue-600 cursor-pointer text-white p-3 rounded-md font-medium ${createGoat.isPending ? 'opacity-50 cursor-not-allowed' : ''
-                            }`}
+                        disabled={
+                            createGoat.isPending ||
+                            updateGoat.isPending ||
+                            isSubmitting
+                        }
+                        className="mt-4 bg-blue-500 w-1/2 mx-auto hover:bg-blue-600 text-white p-3 rounded-md font-medium disabled:opacity-50"
                     >
-                        {createGoat.isPending ? 'Saving...' : 'Save'}
+                        {editGoat
+                            ? (updateGoat.isPending ? "Updating..." : "Update")
+                            : (createGoat.isPending ? "Saving..." : "Save")
+                        }
                     </button>
                 </div>
 
@@ -555,6 +604,7 @@ const AddAnimalForm = () => {
                                     <th className="border p-2">Partition</th>
                                     <th className="border p-2">Site</th>
                                     <th className="border p-2">Purchase Type</th>
+                                    <th className="border p-2">Breed Type</th>
                                     <th className="border p-2">DOB</th>
                                     <th className="border p-2">Purchase Date</th>
                                     <th className="border p-2">Purchase Price</th>
@@ -571,7 +621,7 @@ const AddAnimalForm = () => {
                                     </tr>
                                 ) : (
                                     goats?.data?.map((a: any, i: number) => (
-                                        <tr key={a.id} className="text-center">
+                                        <tr key={a._id || a.tagId || i} className="text-center">
 
                                             <td className="border p-1">{i + 1}</td>
                                             <td className="border p-1">{a.tagId}</td>
@@ -586,6 +636,7 @@ const AddAnimalForm = () => {
                                             <td className="border p-1">{a.partition}</td>
                                             <td className="border p-1">{a.site}</td>
                                             <td className="border p-1">{a.purchaseType}</td>
+                                            <td className="border p-1">{a.breedType}</td>
                                             <td className="border p-1">{formatField(a.dateOfBirth, true)}</td>
                                             <td className="border p-1">{formatField(a.purchaseDate, true)}</td>
                                             <td className="border p-1">{formatField(a.purchasePrice)}</td>
@@ -593,12 +644,11 @@ const AddAnimalForm = () => {
                                             <td className="border p-1">
                                                 <div className="flex items-center justify-center gap-2">
 
-                                                    <button className="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 cursor-pointer">
+                                                    <button
+                                                        onClick={() => handleEdit(a)}
+                                                        className="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 cursor-pointer">
                                                         Edit
                                                     </button>
-
-                                                    {/* Vertical Separator */}
-                                                    {/* <div className="w-[2px] h-7 bg-blue-500"></div> */}
                                                     <div className="w-[2px] h-7 bg-gradient-to-b from-blue-500 to-red-500"></div>
                                                     <button
                                                         onClick={() => deleteGoat(a.tagId)}

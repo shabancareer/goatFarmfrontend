@@ -18,3 +18,7 @@ export const deleteGoat = async (id: string | number) => {
     const res = await api.delete(`/goats/${id}`);
     return res.data;
 };
+export const updateGoat = async ({ id, ...goatData }: any) => {
+    const response = await api.put(`/goats/${id}`, goatData);
+    return response.data;
+};
