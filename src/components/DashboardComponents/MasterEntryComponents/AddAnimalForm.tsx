@@ -184,13 +184,13 @@ const AddAnimalForm = () => {
                     data.purchaseType === "purchase" ? "Purchase" : "Own",
                 type: formattedType,
                 tagId: data.tagId,
-                weight: Number(data.weight) || 0,
+                weight: Number(data.weight),
                 breedType: data.breedType,
-                motherId: Number(data.motherId) || 0,
-                fatherId: Number(data.fatherId) || 0,
+                motherId: Number(data.motherId),
+                fatherId: Number(data.fatherId),
                 partition: data.partition,
                 site: data.site,
-                purchasePrice: Number(data.purchasePrice) || 0,
+                purchasePrice: Number(data.purchasePrice),
                 purchaseFram: data.purchaseFrom,
             };
 
@@ -200,12 +200,12 @@ const AddAnimalForm = () => {
                 goatData.kiddingCapacity = Number(data.kiddingCapacity);
 
             if (editGoat) {
-                // ✅ UPDATE
+                // UPDATE
                 await updateGoat.mutateAsync({
                     id: editGoat.tagId,
                     ...goatData,
                 });
-                alert("Goat updated successfully!");
+                alert("Goat updated successfully");
             } else {
                 // ✅ CREATE
                 await createGoat.mutateAsync(goatData);
@@ -452,28 +452,56 @@ const AddAnimalForm = () => {
 
                     {/* Mother ID */}
                     <div className="flex flex-col justify-center p-1">
-                        <label htmlFor="motherId">Mother ID</label>
+                        <label htmlFor="motherId" className="font-medium">Mother ID {editGoat && purchaseType === 'own' ? '*' : ''}</label>
                         <input
                             id="motherId"
                             type="number"
-                            {...register('motherId')}
+                            {...register('motherId', {
+                                required: (editGoat && purchaseType === 'own') ? 'Mother ID is required' : false,
+                                validate: (value) => {
+                                    if (editGoat && purchaseType === 'own') {
+                                        if (Number(value) === 0) return "Mother ID cannot be 0";
+                                        const matchedGoat = goats?.data?.find((g: any) => String(g.tagId) === String(value));
+                                        if (!matchedGoat) return "Mother ID must be a valid existing Tag ID";
+                                        if (matchedGoat.gender?.toLowerCase() !== "female") return "Mother ID must belong to a Female goat";
+                                    }
+                                    return true;
+                                }
+                            })}
                             disabled={purchaseType === "purchase"}
-                            className="border border-gray-300 rounded-md p-2 disabled:bg-gray-200"
+                            className={`border ${errors.motherId ? 'border-red-500' : 'border-gray-300'} rounded-md p-2 disabled:bg-gray-200`}
                             placeholder="Mother ID"
                         />
+                        {errors.motherId && (
+                            <span className="text-red-500 text-xs mt-1">{errors.motherId.message}</span>
+                        )}
                     </div>
 
                     {/* Father ID */}
                     <div className="flex flex-col justify-center p-1">
-                        <label htmlFor="fatherId">Father ID</label>
+                        <label htmlFor="fatherId" className="font-medium">Father ID {editGoat && purchaseType === 'own' ? '*' : ''}</label>
                         <input
                             id="fatherId"
                             type="number"
-                            {...register('fatherId')}
+                            {...register('fatherId', {
+                                required: (editGoat && purchaseType === 'own') ? 'Father ID is required' : false,
+                                validate: (value) => {
+                                    if (editGoat && purchaseType === 'own') {
+                                        if (Number(value) === 0) return "Father ID cannot be 0";
+                                        const matchedGoat = goats?.data?.find((g: any) => String(g.tagId) === String(value));
+                                        if (!matchedGoat) return "Father ID must be a valid existing Tag ID";
+                                        if (matchedGoat.gender?.toLowerCase() !== "male") return "Father ID must belong to a Male goat";
+                                    }
+                                    return true;
+                                }
+                            })}
                             disabled={purchaseType === "purchase"}
-                            className="border border-gray-300 rounded-md p-2 disabled:bg-gray-200"
+                            className={`border ${errors.fatherId ? 'border-red-500' : 'border-gray-300'} rounded-md p-2 disabled:bg-gray-200`}
                             placeholder="Father ID"
                         />
+                        {errors.fatherId && (
+                            <span className="text-red-500 text-xs mt-1">{errors.fatherId.message}</span>
+                        )}
                     </div>
 
                     {/* Partition */}
@@ -622,7 +650,6 @@ const AddAnimalForm = () => {
                                 ) : (
                                     goats?.data?.map((a: any, i: number) => (
                                         <tr key={a._id || a.tagId || i} className="text-center">
-
                                             <td className="border p-1">{i + 1}</td>
                                             <td className="border p-1">{a.tagId}</td>
                                             <td className="border p-1">{a.gender}</td>
