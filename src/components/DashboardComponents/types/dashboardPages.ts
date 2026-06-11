@@ -13,4 +13,5 @@ export type DashboardPages =
     | "Manage Bank"
     | "Herd"
     | "Manage Animal"
-    | "HerdManagement";
+    | "HerdManagement"
+    | "Employe Managment"

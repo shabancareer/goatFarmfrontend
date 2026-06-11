@@ -11,6 +11,8 @@ import Dashboard from './components/DashboardComponents/mainDashboard.tsx'
 import AnimalPanel from "./components/ManageAnimal/AnimalPanel.tsx";
 import ManageGoats from "./features/manageGoats/manageGoats.tsx";
 import GeneralDashboard from "./components/DashboardComponents/general-dashboard/generalDashboard.tsx";
+import Register from "./components/auth/Register.tsx";
+
 function App() {
 
   return (
@@ -22,6 +24,7 @@ function App() {
           {/* <Route path="dashboard/generalDashboard" element={<GeneralDashboard />} /> */}
           <Route path="/dashboard/AnimalPanel" element={<AnimalPanel />} />
           <Route path="/dashboard/ManageGoats" element={<ManageGoats />} />
+          <Route path="/auth/register" element={<Register />} />
         </Routes>
       </Router>
     </>

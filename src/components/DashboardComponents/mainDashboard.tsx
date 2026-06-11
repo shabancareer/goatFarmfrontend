@@ -24,6 +24,7 @@ import GeneralDashboard from "./general-dashboard/generalDashboard"
 import type { DashboardPages } from "./types/dashboardPages"
 import Logout from "../profileComponents/logout"
 import ProfileSetting from "../profileComponents/profileSetting"
+import EmployeManagment from "../Employees/employeManagment";
 // import "../styles/panel.css";
 import d1 from "../../assets/goatsImgs/d-1.jpg";
 // import ManageGoats from "../../features/manageGoats/manageGoats"
@@ -46,6 +47,7 @@ export default function Home() {
         "Manage City": <ManageCity />,
         "Manage Bank": <ManageBank />,
         "Herd": <HerdM />,
+        "Employe Managment": <EmployeManagment />,
         // "GeneralDashboard": <GeneralDashboard />,
         // other pages
     };
@@ -74,6 +76,7 @@ export default function Home() {
                         <AlertsNotifications />
                         <HerdManagement onNavigate={(page) => setActivePage(page)} />
                         <MasterEntry onNavigate={(page) => setActivePage(page)} />
+                        <EmployeManagment />
                         <div className="flex flex-col justify-center items-center h-full w-full gap-2">
                             <div className="flex flex-col justify-center gap-2 cursor-pointer">
                                 <ProfileSetting />
