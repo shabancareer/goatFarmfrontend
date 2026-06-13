@@ -1,14 +1,15 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Separator } from "@/components/ui/separator"
 import { X } from "lucide-react";
-import Alert from '@mui/material/Alert';
-import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';
+// import Alert from '@mui/material/Alert';
+// import DeleteIcon from '@mui/icons-material/Delete';
+// import EditIcon from '@mui/icons-material/Edit';
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
 import { useForm } from 'react-hook-form';
 import { useCreateGoat, useGetAllGoats, useDeleteGoat, useUpdateGoat } from '@/hooks/useCreateGoat';
+import toast from "react-hot-toast";
 // import { AnimalInterface } from '@/components/DashboardComponents/MasterEntryComponents/Interfaces/AnimalInterface';
 
 interface FormData {
@@ -64,7 +65,7 @@ const AddAnimalForm = () => {
         handleSubmit,
         watch,
         reset,
-        setValue,
+        // setValue,
         formState: { errors, isSubmitting }
     } = useForm<FormData>({
         defaultValues: {
@@ -86,6 +87,7 @@ const AddAnimalForm = () => {
             purchaseFrom: ''
         }
     });
+
     const handleExportPDF = () => {
         const doc = new jsPDF();
         // Table headers (same as your UI)
@@ -168,6 +170,76 @@ const AddAnimalForm = () => {
         });
         doc.save("goats.pdf");
     }
+    const validateParentForm = (
+        value: any,
+        type: "mother" | "father",
+        goats: any[],
+        currentTagId?: string
+    ) => {
+        if (!value) return `${type} ID is required`;
+
+        const id = Number(value);
+
+        if (id === 0) return `${type} ID cannot be 0`;
+
+        // prevent self-reference
+        if (currentTagId && String(currentTagId) === String(id)) {
+            return `${type} cannot be same as child tag ID`;
+        }
+
+        const matched = goats?.find((g: any) => String(g.tagId) === String(id));
+
+        if (!matched) return `${type} ID must exist in system`;
+
+        if (type === "mother" && matched.gender?.toLowerCase() !== "female") {
+            return `Mother must be female goat`;
+        }
+
+        if (type === "father" && matched.gender?.toLowerCase() !== "male") {
+            return `Father must be male goat`;
+        }
+
+        return true;
+    };
+    const getMotherSuggestions = (goats: any[], breedType?: string, currentTagId?: string) => {
+        return goats
+            ?.filter(g =>
+                g.gender?.toLowerCase() === "female" &&
+                String(g.tagId) !== String(currentTagId)
+            )
+            .filter(g =>
+                breedType ? g.breedType === breedType : true
+            );
+    };
+    const getFatherSuggestions = (goats: any[], breedType?: string, currentTagId?: string) => {
+        return goats
+            ?.filter(g =>
+                g.gender?.toLowerCase() === "male" &&
+                String(g.tagId) !== String(currentTagId)
+            )
+            .filter(g =>
+                breedType ? g.breedType === breedType : true
+            );
+    };
+    const selectedBreed = watch("breedType");
+    const motherSuggestions = useMemo(
+        () =>
+            getMotherSuggestions(
+                goats?.data || [],
+                selectedBreed,
+                editGoat?.tagId
+            ),
+        [goats?.data, selectedBreed, editGoat?.tagId]
+    );
+    const fatherSuggestions = useMemo(
+        () =>
+            getFatherSuggestions(
+                goats?.data || [],
+                selectedBreed,
+                editGoat?.tagId
+            ),
+        [goats?.data, selectedBreed, editGoat?.tagId]
+    );
     const gender = watch('gender');
     const purchaseType = watch('purchaseType');
     const onSubmit = async (data: FormData) => {
@@ -193,31 +265,48 @@ const AddAnimalForm = () => {
                 purchasePrice: Number(data.purchasePrice),
                 purchaseFram: data.purchaseFrom,
             };
-
             if (data.dateOfBirth) goatData.dateOfBirth = data.dateOfBirth;
             if (data.dateOfPurchase) goatData.purchaseDate = data.dateOfPurchase;
             if (data.kiddingCapacity)
                 goatData.kiddingCapacity = Number(data.kiddingCapacity);
-
+            if (
+                data.motherId &&
+                data.fatherId &&
+                data.motherId === data.fatherId
+            ) {
+                toast.error("Mother and Father cannot be the same goat");
+                return;
+            }
+            if (
+                data.tagId === data.motherId ||
+                data.tagId === data.fatherId
+            ) {
+                toast.error("A goat cannot be its own parent");
+                return;
+            }
             if (editGoat) {
                 // UPDATE
                 await updateGoat.mutateAsync({
                     id: editGoat.tagId,
                     ...goatData,
                 });
-                alert("Goat updated successfully");
+                // alert("Goat updated successfully");
+                toast.success('Goat updated successfully');
+
             } else {
                 // ✅ CREATE
                 await createGoat.mutateAsync(goatData);
-                alert("Goat added successfully!");
+                // alert("Goat added successfully!");
+                toast.success('Goat added successfully');
             }
 
             reset();
             setShowModal(false);
             setEditGoat(null);
 
-        } catch (error) {
-            console.error("Error:", error);
+        } catch (error: any) {
+            // console.error("Error:", error);
+            toast.error(error.message)
         }
     };
     const handleEdit = (goat: any) => {
@@ -237,7 +326,7 @@ const AddAnimalForm = () => {
             partition: goat.partition,
             site: goat.site,
             purchasePrice: goat.purchasePrice,
-            purchaseFrom: goat.purchaseFram,
+            purchaseFrom: goat.purchaseFram, // Note: watch out for typo 'purchaseFram' vs 'purchaseFrom'
             dateOfBirth: goat.dateOfBirth?.split("T")[0],
             dateOfPurchase: goat.purchaseDate?.split("T")[0],
             kiddingCapacity: goat.kiddingCapacity,
@@ -449,59 +538,62 @@ const AddAnimalForm = () => {
                             <span className="text-red-500 text-xs mt-1">{errors.breedType.message}</span>
                         )}
                     </div>
-
                     {/* Mother ID */}
-                    <div className="flex flex-col justify-center p-1">
-                        <label htmlFor="motherId" className="font-medium">Mother ID {editGoat && purchaseType === 'own' ? '*' : ''}</label>
-                        <input
-                            id="motherId"
-                            type="number"
-                            {...register('motherId', {
-                                required: (editGoat && purchaseType === 'own') ? 'Mother ID is required' : false,
-                                validate: (value) => {
-                                    if (editGoat && purchaseType === 'own') {
-                                        if (Number(value) === 0) return "Mother ID cannot be 0";
-                                        const matchedGoat = goats?.data?.find((g: any) => String(g.tagId) === String(value));
-                                        if (!matchedGoat) return "Mother ID must be a valid existing Tag ID";
-                                        if (matchedGoat.gender?.toLowerCase() !== "female") return "Mother ID must belong to a Female goat";
-                                    }
-                                    return true;
-                                }
+                    <div className="flex flex-col justify-center p-1 border-1 border-gray-400 rounded-md p-2">
+                        <label htmlFor="motherId" className="font-medium">Mother ID *</label>
+                        <option value="">Select Mother</option>
+                        <select
+                            {...register("motherId", {
+                                required:
+                                    purchaseType === "own"
+                                        ? "Mother ID is required"
+                                        : false,
+
+                                validate: (value) =>
+                                    validateParentForm(
+                                        value,
+                                        "mother",
+                                        goats?.data || [],
+                                        watch("tagId") // current goat tag
+                                    )
                             })}
-                            disabled={purchaseType === "purchase"}
-                            className={`border ${errors.motherId ? 'border-red-500' : 'border-gray-300'} rounded-md p-2 disabled:bg-gray-200`}
-                            placeholder="Mother ID"
-                        />
-                        {errors.motherId && (
-                            <span className="text-red-500 text-xs mt-1">{errors.motherId.message}</span>
-                        )}
+                        >
+
+                            {motherSuggestions.map((g: any) => (
+                                <option key={g.tagId} value={g.tagId}>
+                                    {g.tagId} - {g.animalName}
+                                </option>
+                            ))}
+                        </select>
                     </div>
 
                     {/* Father ID */}
                     <div className="flex flex-col justify-center p-1">
-                        <label htmlFor="fatherId" className="font-medium">Father ID {editGoat && purchaseType === 'own' ? '*' : ''}</label>
-                        <input
-                            id="fatherId"
-                            type="number"
-                            {...register('fatherId', {
-                                required: (editGoat && purchaseType === 'own') ? 'Father ID is required' : false,
-                                validate: (value) => {
-                                    if (editGoat && purchaseType === 'own') {
-                                        if (Number(value) === 0) return "Father ID cannot be 0";
-                                        const matchedGoat = goats?.data?.find((g: any) => String(g.tagId) === String(value));
-                                        if (!matchedGoat) return "Father ID must be a valid existing Tag ID";
-                                        if (matchedGoat.gender?.toLowerCase() !== "male") return "Father ID must belong to a Male goat";
-                                    }
-                                    return true;
-                                }
+                        <label htmlFor="fatherId" className="font-medium">Father ID *</label>
+                        <option value="">Select Father</option>
+                        <select
+                            {...register("fatherId", {
+                                required:
+                                    purchaseType === "own"
+                                        ? "Father ID is required"
+                                        : false,
+
+                                validate: (value) =>
+                                    validateParentForm(
+                                        value,
+                                        "father",
+                                        goats?.data || [],
+                                        watch("tagId")
+                                    )
                             })}
-                            disabled={purchaseType === "purchase"}
-                            className={`border ${errors.fatherId ? 'border-red-500' : 'border-gray-300'} rounded-md p-2 disabled:bg-gray-200`}
-                            placeholder="Father ID"
-                        />
-                        {errors.fatherId && (
-                            <span className="text-red-500 text-xs mt-1">{errors.fatherId.message}</span>
-                        )}
+                        >
+
+                            {fatherSuggestions.map((g: any) => (
+                                <option key={g.tagId} value={g.tagId}>
+                                    {g.tagId} - {g.animalName}
+                                </option>
+                            ))}
+                        </select>
                     </div>
 
                     {/* Partition */}

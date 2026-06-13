@@ -4,17 +4,19 @@ import { useDispatch, useSelector } from 'react-redux';
 import { registerSuperOwner } from '../../features/auth/thunks/auth.thunks';
 import type { AppDispatch, RootState } from '../../store/store';
 import { clearError } from '../../features/auth/slice/auth.slice';
+import { useNavigate } from 'react-router-dom';
+import d1 from "../../assets/goatsImgs/d-1.jpg";
+import toast from 'react-hot-toast';
+
 
 // import { useAppDispatch, useAppSelector } from '../../reduxHooks/hooks';
-// import { Link, useNavigate } from 'react-router-dom';
 
 export default function Register() {
-    // const navigate = useNavigate();
+    const navigate = useNavigate();
     const dispatch = useDispatch<AppDispatch>();
     const { status, error } = useSelector(
         (state: RootState) => state.auth
     );
-
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -42,25 +44,36 @@ export default function Register() {
             );
 
             if (registerSuperOwner.fulfilled.match(result)) {
-                alert('Registration successful!');
+                toast.success('Registration successful!');
                 setFormData({
                     name: '',
                     email: '',
                     password: '',
                     organizationName: '',
                 });
+                // alert('Registration successful!');
             }
         } catch (err) {
             console.error(err);
             dispatch(clearError());
+            toast.error('Registration failed!');
+
         }
+        navigate('/')
     };
 
     // const loading = status === 'loading';
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-slate-100 p-6">
-            <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-8">
+        <div className="h-[100vh] w-[100vw] flex items-center justify-center"
+            style={{
+                backgroundImage: `url(${d1})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                backgroundRepeat: "no-repeat",
+            }}
+        >
+            <div className="w-full max-w-150 bg-white rounded-xl shadow-lg p-8">
                 <div className="text-center mb-6">
                     <h1 className="text-3xl font-bold text-slate-800">
                         Create Account
@@ -153,5 +166,6 @@ export default function Register() {
                 </form>
             </div>
         </div>
+
     );
 }
