@@ -8,8 +8,9 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
 import { useForm } from 'react-hook-form';
-import { useCreateGoat, useGetAllGoats, useDeleteGoat, useUpdateGoat } from '@/hooks/useCreateGoat';
 import toast from "react-hot-toast";
+import { useWatch } from "react-hook-form";
+import { useCreateGoat, useGetAllGoats, useDeleteGoat, useUpdateGoat } from '@/hooks/useCreateGoat';
 // import { AnimalInterface } from '@/components/DashboardComponents/MasterEntryComponents/Interfaces/AnimalInterface';
 
 interface FormData {
@@ -65,6 +66,7 @@ const AddAnimalForm = () => {
         handleSubmit,
         watch,
         reset,
+        control,
         // setValue,
         formState: { errors, isSubmitting }
     } = useForm<FormData>({
@@ -170,6 +172,7 @@ const AddAnimalForm = () => {
         });
         doc.save("goats.pdf");
     }
+
     const validateParentForm = (
         value: any,
         type: "mother" | "father",
@@ -201,49 +204,65 @@ const AddAnimalForm = () => {
 
         return true;
     };
-    const getMotherSuggestions = (goats: any[], breedType?: string, currentTagId?: string) => {
+    // const purchaseType = watch('purchaseType');
+    // const gender = watch('gender');
+
+    const purchaseType = useWatch({ control, name: "purchaseType" });
+    const gender = useWatch({ control, name: "gender" });
+    const currentTagId = useWatch({ control, name: "tagId" });
+    const getMotherSuggestions = (goats: any[], currentTagId: string) => {
         return goats
             ?.filter(g =>
                 g.gender?.toLowerCase() === "female" &&
                 String(g.tagId) !== String(currentTagId)
             )
-            .filter(g =>
-                breedType ? g.breedType === breedType : true
-            );
     };
-    const getFatherSuggestions = (goats: any[], breedType?: string, currentTagId?: string) => {
+    const getFatherSuggestions = (goats: any[], currentTagId: string) => {
         return goats
             ?.filter(g =>
                 g.gender?.toLowerCase() === "male" &&
                 String(g.tagId) !== String(currentTagId)
             )
-            .filter(g =>
-                breedType ? g.breedType === breedType : true
-            );
     };
-    const selectedBreed = watch("breedType");
-    const motherSuggestions = useMemo(
-        () =>
-            getMotherSuggestions(
-                goats?.data || [],
-                selectedBreed,
-                editGoat?.tagId
-            ),
-        [goats?.data, selectedBreed, editGoat?.tagId]
-    );
-    const fatherSuggestions = useMemo(
-        () =>
-            getFatherSuggestions(
-                goats?.data || [],
-                selectedBreed,
-                editGoat?.tagId
-            ),
-        [goats?.data, selectedBreed, editGoat?.tagId]
-    );
-    const gender = watch('gender');
-    const purchaseType = watch('purchaseType');
+    const motherSuggestions = useMemo(() => {
+        if (purchaseType !== "own") return [];
+
+        return getMotherSuggestions(
+            goats?.data || [],
+            currentTagId
+        );
+    }, [goats?.data, purchaseType, currentTagId]);
+
+    const fatherSuggestions = useMemo(() => {
+        if (purchaseType !== "own") return [];
+
+        return getFatherSuggestions(
+            goats?.data || [],
+            currentTagId
+        );
+    }, [goats?.data, purchaseType, currentTagId]);
+
+    const emptyFormValues = {
+        animalName: '',
+        gender: '',
+        purchaseType: '',
+        dateOfBirth: '',
+        dateOfPurchase: '',
+        type: '',
+        kiddingCapacity: null,
+        tagId: '',
+        weight: 0,
+        breedType: '',
+        motherId: '',
+        fatherId: '',
+        partition: '',
+        site: '',
+        purchasePrice: 0,
+        purchaseFrom: ''
+    };
     const onSubmit = async (data: FormData) => {
         try {
+            setEditGoat(null);
             const formattedType =
                 data.type === "buk"
                     ? "BUK"
@@ -300,7 +319,7 @@ const AddAnimalForm = () => {
                 toast.success('Goat added successfully');
             }
 
-            reset();
+            reset(emptyFormValues);
             setShowModal(false);
             setEditGoat(null);
 
@@ -353,7 +372,11 @@ const AddAnimalForm = () => {
                 )}
                 <div className="grid grid-cols-2 gap-2 border border-2 w-1/2 rounded-lg mx-auto bg-white shadow-lg p-8">
                     <button
-                        onClick={() => setShowModal(false)}
+                        onClick={() => {
+                            setShowModal(false);
+                            setEditGoat(null);
+                            reset(emptyFormValues);
+                        }}
                         className="w-10 h-10 mt-[-10px] mb-[-10px] flex items-center justify-center absolute right-180 bg-gradient-to-b from-blue-500 to-red-500 hover:from-red-500 hover:to-blue-500 cursor-pointer text-white rounded-md"
                     >
                         <X />
@@ -539,26 +562,34 @@ const AddAnimalForm = () => {
                         )}
                     </div>
                     {/* Mother ID */}
-                    <div className="flex flex-col justify-center p-1 border-1 border-gray-400 rounded-md p-2">
-                        <label htmlFor="motherId" className="font-medium">Mother ID *</label>
-                        <option value="">Select Mother</option>
+                    <div className="flex flex-col justify-center p-1">
+                        <label htmlFor="motherId" className="font-medium">Mother ID {purchaseType === 'own' ? '*' : ''}</label>
+
                         <select
+                            className={`
+                                border rounded-md p-2
+                                ${errors.motherId ? 'border-red-500' : 'border-gray-300'}
+                                ${purchaseType !== 'own' ? 'bg-gray-200 cursor-not-allowed' : ''}
+                            `}
+                            disabled={purchaseType !== "own"}
                             {...register("motherId", {
                                 required:
                                     purchaseType === "own"
                                         ? "Mother ID is required"
                                         : false,
+                                validate: (value) => {
+                                    if (purchaseType !== "own") return true;
 
-                                validate: (value) =>
-                                    validateParentForm(
+                                    return validateParentForm(
                                         value,
                                         "mother",
                                         goats?.data || [],
-                                        watch("tagId") // current goat tag
-                                    )
+                                        watch("tagId")
+                                    );
+                                }
                             })}
                         >
-
+                            <option value="">Select Mother</option>
                             {motherSuggestions.map((g: any) => (
                                 <option key={g.tagId} value={g.tagId}>
                                     {g.tagId} - {g.animalName}
@@ -568,26 +599,35 @@ const AddAnimalForm = () => {
                     </div>
 
                     {/* Father ID */}
-                    <div className="flex flex-col justify-center p-1">
-                        <label htmlFor="fatherId" className="font-medium">Father ID *</label>
-                        <option value="">Select Father</option>
+                    <div className="flex flex-col justify-center">
+                        <label htmlFor="fatherId" className="font-medium">Father ID {purchaseType === 'own' ? '*' : ''}</label>
+                        {/* <option value="">Select Father</option> */}
                         <select
+                            className={`
+    border rounded-md p-2
+    ${errors.fatherId ? 'border-red-500' : 'border-gray-300'}
+    ${purchaseType !== 'own' ? 'bg-gray-200 cursor-not-allowed' : ''}
+`}
+                            disabled={purchaseType !== "own"}
+
                             {...register("fatherId", {
                                 required:
                                     purchaseType === "own"
                                         ? "Father ID is required"
                                         : false,
+                                validate: (value) => {
+                                    if (purchaseType !== "own") return true;
 
-                                validate: (value) =>
-                                    validateParentForm(
+                                    return validateParentForm(
                                         value,
                                         "father",
                                         goats?.data || [],
                                         watch("tagId")
-                                    )
+                                    );
+                                }
                             })}
                         >
-
+                            <option value="">Select Father</option>
                             {fatherSuggestions.map((g: any) => (
                                 <option key={g.tagId} value={g.tagId}>
                                     {g.tagId} - {g.animalName}
@@ -712,19 +752,21 @@ const AddAnimalForm = () => {
                             <thead className="bg-blue-400 sticky top-0 z-0">
                                 <tr>
                                     <th className="border p-2">Sr#</th>
+                                    <th className="border p-2">Added Date</th>
                                     <th className="border p-2">Tag ID</th>
                                     <th className="border p-2">Gender</th>
                                     <th className="border p-2">Weight</th>
                                     <th className="border p-2">Kidding Capacity</th>
                                     <th className="border p-2">Animal Type</th>
                                     <th className="border p-2">Animal Name</th>
+                                    <th className="border p-2">Site</th>
+                                    <th className="border p-2">Partition</th>
+                                    <th className="border p-2">Breed Type</th>
                                     <th className="border p-2">Age</th>
                                     <th className="border p-2">Mother ID</th>
                                     <th className="border p-2">Father ID</th>
-                                    <th className="border p-2">Partition</th>
-                                    <th className="border p-2">Site</th>
                                     <th className="border p-2">Purchase Type</th>
-                                    <th className="border p-2">Breed Type</th>
+
                                     <th className="border p-2">DOB</th>
                                     <th className="border p-2">Purchase Date</th>
                                     <th className="border p-2">Purchase Price</th>
@@ -741,28 +783,29 @@ const AddAnimalForm = () => {
                                     </tr>
                                 ) : (
                                     goats?.data?.map((a: any, i: number) => (
+                                        console.log("All goats", goats),
                                         <tr key={a._id || a.tagId || i} className="text-center">
                                             <td className="border p-1">{i + 1}</td>
+                                            <td className="border p-1">{formatField(a.createdAt, true)}</td>
                                             <td className="border p-1">{a.tagId}</td>
                                             <td className="border p-1">{a.gender}</td>
                                             <td className="border p-1">{a.weight}</td>
                                             <td className="border p-1">{formatField(a.kiddingCapacity)}</td>
                                             <td className="border p-1">{a.type}</td>
                                             <td className="border p-1">{a.animalName}</td>
+                                            <td className="border p-1">{a.site}</td>
+                                            <td className="border p-1">{a.partition}</td>
+                                            <td className="border p-1">{a.breedType}</td>
                                             <td className="border p-1">{a.age}</td>
                                             <td className="border p-1">{formatField(a.motherId)}</td>
                                             <td className="border p-1">{formatField(a.fatherId)}</td>
-                                            <td className="border p-1">{a.partition}</td>
-                                            <td className="border p-1">{a.site}</td>
                                             <td className="border p-1">{a.purchaseType}</td>
-                                            <td className="border p-1">{a.breedType}</td>
                                             <td className="border p-1">{formatField(a.dateOfBirth, true)}</td>
                                             <td className="border p-1">{formatField(a.purchaseDate, true)}</td>
                                             <td className="border p-1">{formatField(a.purchasePrice)}</td>
                                             <td className="border p-1">{formatField(a.purchaseFram)}</td>
                                             <td className="border p-1">
                                                 <div className="flex items-center justify-center gap-2">
-
                                                     <button
                                                         onClick={() => handleEdit(a)}
                                                         className="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 cursor-pointer">
@@ -775,11 +818,8 @@ const AddAnimalForm = () => {
                                                     >
                                                         Delete
                                                     </button>
-
                                                 </div>
                                             </td>
-
-
                                         </tr>
                                     ))
                                 )}
