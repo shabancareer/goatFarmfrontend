@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Separator } from "@/components/ui/separator"
 import { X } from "lucide-react";
 // import Alert from '@mui/material/Alert';
@@ -61,13 +61,14 @@ const AddAnimalForm = () => {
     const createGoat = useCreateGoat();
     const updateGoat = useUpdateGoat();
     const { mutate: deleteGoat } = useDeleteGoat();
+
     const {
         register,
         handleSubmit,
         watch,
         reset,
         control,
-        // setValue,
+        setValue,
         formState: { errors, isSubmitting }
     } = useForm<FormData>({
         defaultValues: {
@@ -351,6 +352,27 @@ const AddAnimalForm = () => {
             kiddingCapacity: goat.kiddingCapacity,
         });
     };
+
+    useEffect(() => {
+        if (purchaseType === "own") {
+            setValue("purchasePrice", 0);
+            setValue("purchaseFrom", "");
+            setValue("dateOfPurchase", "");
+
+            // Optional
+            setValue("motherId", "");
+            setValue("fatherId", "");
+        }
+
+        if (purchaseType === "purchase") {
+            setValue("motherId", "");
+            setValue("fatherId", "");
+            setValue("dateOfBirth", "");
+        }
+        if (gender === 'Male') {
+            setValue("kiddingCapacity", null);
+        }
+    }, [purchaseType, gender, setValue]);
 
     return (
         <div className="manage-animal-bg w-full h-full">
@@ -783,7 +805,6 @@ const AddAnimalForm = () => {
                                     </tr>
                                 ) : (
                                     goats?.data?.map((a: any, i: number) => (
-                                        console.log("All goats", goats),
                                         <tr key={a._id || a.tagId || i} className="text-center">
                                             <td className="border p-1">{i + 1}</td>
                                             <td className="border p-1">{formatField(a.createdAt, true)}</td>
