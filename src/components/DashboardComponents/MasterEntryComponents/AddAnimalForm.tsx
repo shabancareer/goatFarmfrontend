@@ -262,8 +262,28 @@ const AddAnimalForm = () => {
         purchaseFrom: ''
     };
     const onSubmit = async (data: FormData) => {
+        console.log("onSubmit:", data);
+
         try {
-            setEditGoat(null);
+            // Validation: Mother and Father cannot be same
+            if (
+                data.motherId &&
+                data.fatherId &&
+                String(data.motherId) === String(data.fatherId)
+            ) {
+                toast.error("Mother and Father cannot be the same goat");
+                return;
+            }
+
+            // Validation: Goat cannot be its own parent
+            if (
+                String(data.tagId) === String(data.motherId) ||
+                String(data.tagId) === String(data.fatherId)
+            ) {
+                toast.error("A goat cannot be its own parent");
+                return;
+            }
+
             const formattedType =
                 data.type === "buk"
                     ? "BUK"
@@ -273,65 +293,113 @@ const AddAnimalForm = () => {
                 animalName: data.animalName,
                 gender: data.gender,
                 purchaseType:
-                    data.purchaseType === "purchase" ? "Purchase" : "Own",
+                    data.purchaseType === "purchase"
+                        ? "Purchase"
+                        : "Own",
                 type: formattedType,
                 tagId: data.tagId,
                 weight: Number(data.weight),
                 breedType: data.breedType,
-                motherId: Number(data.motherId),
-                fatherId: Number(data.fatherId),
                 partition: data.partition,
                 site: data.site,
-                purchasePrice: Number(data.purchasePrice),
-                purchaseFram: data.purchaseFrom,
             };
-            if (data.dateOfBirth) goatData.dateOfBirth = data.dateOfBirth;
-            if (data.dateOfPurchase) goatData.purchaseDate = data.dateOfPurchase;
-            if (data.kiddingCapacity)
-                goatData.kiddingCapacity = Number(data.kiddingCapacity);
-            if (
-                data.motherId &&
-                data.fatherId &&
-                data.motherId === data.fatherId
-            ) {
-                toast.error("Mother and Father cannot be the same goat");
-                return;
+
+            // ==========================
+            // PURCHASE TYPE: OWN
+            // ==========================
+            if (data.purchaseType === "own") {
+                goatData.motherId = data.motherId
+                    ? Number(data.motherId)
+                    : null;
+
+                goatData.fatherId = data.fatherId
+                    ? Number(data.fatherId)
+                    : null;
+
+                goatData.dateOfBirth = data.dateOfBirth || null;
+
+                // Clear purchase fields
+                goatData.purchasePrice = null;
+                goatData.purchaseFram = null;
+                goatData.purchaseDate = null;
             }
-            if (
-                data.tagId === data.motherId ||
-                data.tagId === data.fatherId
-            ) {
-                toast.error("A goat cannot be its own parent");
-                return;
+
+            // ==========================
+            // PURCHASE TYPE: PURCHASE
+            // ==========================
+            if (data.purchaseType === "purchase") {
+                goatData.purchasePrice = data.purchasePrice
+                    ? Number(data.purchasePrice)
+                    : null;
+
+                goatData.purchaseFram =
+                    data.purchaseFrom?.trim() || null;
+
+                goatData.purchaseDate =
+                    data.dateOfPurchase || null;
+
+                // Clear lineage fields
+                goatData.motherId = null;
+                goatData.fatherId = null;
+                goatData.dateOfBirth = null;
             }
+
+            // ==========================
+            // GENDER LOGIC
+            // ==========================
+            if (data.gender === "Female") {
+                goatData.kiddingCapacity = data.kiddingCapacity
+                    ? Number(data.kiddingCapacity)
+                    : null;
+            } else {
+                goatData.kiddingCapacity = null;
+            }
+
+            console.log("Final Payload:", goatData);
+
+            // ==========================
+            // UPDATE
+            // ==========================
             if (editGoat) {
-                // UPDATE
                 await updateGoat.mutateAsync({
                     id: editGoat.tagId,
                     ...goatData,
                 });
-                // alert("Goat updated successfully");
-                toast.success('Goat updated successfully');
 
-            } else {
-                // ✅ CREATE
-                await createGoat.mutateAsync(goatData);
-                // alert("Goat added successfully!");
-                toast.success('Goat added successfully');
+                toast.success("Goat updated successfully");
             }
 
+            // ==========================
+            // CREATE
+            // ==========================
+            else {
+                await createGoat.mutateAsync(goatData);
+
+                toast.success("Goat added successfully");
+            }
+
+            // ==========================
+            // RESET FORM
+            // ==========================
             reset(emptyFormValues);
-            setShowModal(false);
             setEditGoat(null);
+            setShowModal(false);
 
         } catch (error: any) {
-            // console.error("Error:", error);
-            toast.error(error.message)
+            console.error(error);
+
+            toast.error(
+                error?.response?.data?.message ||
+                error?.message ||
+                "Something went wrong"
+            );
         }
     };
     const handleEdit = (goat: any) => {
-        setEditGoat(goat);
+        console.log("handleEdit=:", goat)
         setShowModal(true);
+        setEditGoat(goat);
+        // console.log("editGoat=:", editGoat)
         // populate form
         reset({
             animalName: goat.animalName,
@@ -352,27 +420,6 @@ const AddAnimalForm = () => {
             kiddingCapacity: goat.kiddingCapacity,
         });
     };
-
-    useEffect(() => {
-        if (purchaseType === "own") {
-            setValue("purchasePrice", 0);
-            setValue("purchaseFrom", "");
-            setValue("dateOfPurchase", "");
-
-            // Optional
-            setValue("motherId", "");
-            setValue("fatherId", "");
-        }
-
-        if (purchaseType === "purchase") {
-            setValue("motherId", "");
-            setValue("fatherId", "");
-            setValue("dateOfBirth", "");
-        }
-        if (gender === 'Male') {
-            setValue("kiddingCapacity", null);
-        }
-    }, [purchaseType, gender, setValue]);
 
     return (
         <div className="manage-animal-bg w-full h-full">
