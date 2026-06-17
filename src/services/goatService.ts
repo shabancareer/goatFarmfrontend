@@ -4,6 +4,7 @@ import { api } from "./goatApi";
 export const goatService = {
     // Create new goat
     createGoat: async (goatData: any) => {
+        // console.log("Goat Data in Service:", goatData);
         const response = await api.post('/goats', goatData);
         return response.data;
     },

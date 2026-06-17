@@ -7,7 +7,8 @@ export const useCreateGoat = () => {
     return useMutation({
         mutationFn: (goatData: any) => goatService.createGoat(goatData),
         onSuccess: (data) => {
-            // console.log('✅ Goat created successfully:', data);
+
+            console.log('✅ Goat created successfully:', data);
             queryClient.invalidateQueries({ queryKey: ["goats"] });
             // You can add a success toast here
         },
@@ -29,7 +30,7 @@ export const useDeleteGoat = () => {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: (id: string | number) => deleteGoat(id),
-        onSuccess: (data) => {
+        onSuccess: () => {
             // console.log('✅ Goat deleted successfully:', data);
             queryClient.invalidateQueries({ queryKey: ["goats"] });
             // You can add a success toast here
@@ -44,7 +45,7 @@ export const useUpdateGoat = () => {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: (goatData: any) => updateGoat(goatData),
-        onSuccess: (data) => {
+        onSuccess: () => {
             // console.log('✅ Goat updated successfully:', data);
             queryClient.invalidateQueries({ queryKey: ["goats"] });
             // You can add a success toast here

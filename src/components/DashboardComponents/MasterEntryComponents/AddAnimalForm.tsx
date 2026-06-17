@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { Separator } from "@/components/ui/separator"
 import { X } from "lucide-react";
 // import Alert from '@mui/material/Alert';
@@ -68,7 +68,6 @@ const AddAnimalForm = () => {
         watch,
         reset,
         control,
-        setValue,
         formState: { errors, isSubmitting }
     } = useForm<FormData>({
         defaultValues: {
@@ -133,7 +132,7 @@ const AddAnimalForm = () => {
                 formatField(goat.dateOfBirth, true),
                 formatField(goat.dateOfPurchase, true),
                 goat.purchasePrice,
-                goat.purchaseFram
+                goat.purchaseFrom
             ];
             tableRows.push(row);
         });
@@ -269,7 +268,7 @@ const AddAnimalForm = () => {
             if (
                 data.motherId &&
                 data.fatherId &&
-                String(data.motherId) === String(data.fatherId)
+                Number(data.motherId) === Number(data.fatherId)
             ) {
                 toast.error("Mother and Father cannot be the same goat");
                 return;
@@ -277,8 +276,8 @@ const AddAnimalForm = () => {
 
             // Validation: Goat cannot be its own parent
             if (
-                String(data.tagId) === String(data.motherId) ||
-                String(data.tagId) === String(data.fatherId)
+                Number(data.tagId) === Number(data.motherId) ||
+                Number(data.tagId) === Number(data.fatherId)
             ) {
                 toast.error("A goat cannot be its own parent");
                 return;
@@ -297,7 +296,7 @@ const AddAnimalForm = () => {
                         ? "Purchase"
                         : "Own",
                 type: formattedType,
-                tagId: data.tagId,
+                tagId: Number(data.tagId),
                 weight: Number(data.weight),
                 breedType: data.breedType,
                 partition: data.partition,
@@ -320,7 +319,7 @@ const AddAnimalForm = () => {
 
                 // Clear purchase fields
                 goatData.purchasePrice = null;
-                goatData.purchaseFram = null;
+                goatData.purchaseFrom = null;
                 goatData.purchaseDate = null;
             }
 
@@ -332,15 +331,16 @@ const AddAnimalForm = () => {
                     ? Number(data.purchasePrice)
                     : null;
 
-                goatData.purchaseFram =
+                goatData.purchaseFrom =
                     data.purchaseFrom?.trim() || null;
 
                 goatData.purchaseDate =
                     data.dateOfPurchase || null;
 
                 // Clear lineage fields
-                goatData.motherId = null;
-                goatData.fatherId = null;
+                //  TO THIS:
+                delete goatData.motherId;
+                delete goatData.fatherId;
                 goatData.dateOfBirth = null;
             }
 
@@ -354,9 +354,7 @@ const AddAnimalForm = () => {
             } else {
                 goatData.kiddingCapacity = null;
             }
-
-            console.log("Final Payload:", goatData);
-
+            // console.log("Final Payload:", goatData);
             // ==========================
             // UPDATE
             // ==========================
@@ -373,8 +371,8 @@ const AddAnimalForm = () => {
             // CREATE
             // ==========================
             else {
+                console.log("Final Payload:", goatData);
                 await createGoat.mutateAsync(goatData);
-
                 toast.success("Goat added successfully");
             }
 
@@ -387,7 +385,6 @@ const AddAnimalForm = () => {
 
         } catch (error: any) {
             console.error(error);
-
             toast.error(
                 error?.response?.data?.message ||
                 error?.message ||
@@ -414,7 +411,7 @@ const AddAnimalForm = () => {
             partition: goat.partition,
             site: goat.site,
             purchasePrice: goat.purchasePrice,
-            purchaseFrom: goat.purchaseFram, // Note: watch out for typo 'purchaseFram' vs 'purchaseFrom'
+            purchaseFrom: goat.purchaseFrom,
             dateOfBirth: goat.dateOfBirth?.split("T")[0],
             dateOfPurchase: goat.purchaseDate?.split("T")[0],
             kiddingCapacity: goat.kiddingCapacity,
@@ -544,7 +541,7 @@ const AddAnimalForm = () => {
                         >
                             <option value="">Select type</option>
                             <option value="buk">Buk</option>
-                            <option value="weather">Weather</option>
+                            <option value="wether">Wether</option>
                             <option value="doe">Doe</option>
                         </select>
                         {errors.type && (
@@ -580,8 +577,14 @@ const AddAnimalForm = () => {
                         <label htmlFor="tagId" className="font-medium">Tag ID *</label>
                         <input
                             id="tagId"
-                            type="text"
-                            {...register('tagId', { required: 'Tag ID is required' })}
+                            type="number"
+                            {...register('tagId', {
+                                required: 'Tag ID is required',
+                                pattern: {
+                                    value: /^[0-9]+$/,
+                                    message: 'Tag ID must be a number'
+                                }
+                            })}
                             className={`border ${errors.tagId ? 'border-red-500' : 'border-gray-300'} rounded-md p-2`}
                             placeholder="Tag ID"
                         />
@@ -871,7 +874,7 @@ const AddAnimalForm = () => {
                                             <td className="border p-1">{formatField(a.dateOfBirth, true)}</td>
                                             <td className="border p-1">{formatField(a.purchaseDate, true)}</td>
                                             <td className="border p-1">{formatField(a.purchasePrice)}</td>
-                                            <td className="border p-1">{formatField(a.purchaseFram)}</td>
+                                            <td className="border p-1">{formatField(a.purchaseFrom)}</td>
                                             <td className="border p-1">
                                                 <div className="flex items-center justify-center gap-2">
                                                     <button
