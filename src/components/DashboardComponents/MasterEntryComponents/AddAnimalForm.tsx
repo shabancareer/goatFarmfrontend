@@ -221,6 +221,7 @@ const AddAnimalForm = () => {
         return goats
             ?.filter(g =>
                 g.gender?.toLowerCase() === "male" &&
+                g.type?.toLowerCase() === "buk" &&
                 String(g.tagId) !== String(currentTagId)
             )
     };
@@ -261,8 +262,6 @@ const AddAnimalForm = () => {
         purchaseFrom: ''
     };
     const onSubmit = async (data: FormData) => {
-        console.log("onSubmit:", data);
-
         try {
             // Validation: Mother and Father cannot be same
             if (
@@ -636,7 +635,6 @@ const AddAnimalForm = () => {
                     {/* Mother ID */}
                     <div className="flex flex-col justify-center p-1">
                         <label htmlFor="motherId" className="font-medium">Mother ID {purchaseType === 'own' ? '*' : ''}</label>
-
                         <select
                             className={`
                                 border rounded-md p-2
@@ -651,7 +649,6 @@ const AddAnimalForm = () => {
                                         : false,
                                 validate: (value) => {
                                     if (purchaseType !== "own") return true;
-
                                     return validateParentForm(
                                         value,
                                         "mother",
@@ -664,7 +661,7 @@ const AddAnimalForm = () => {
                             <option value="">Select Mother</option>
                             {motherSuggestions.map((g: any) => (
                                 <option key={g.tagId} value={g.tagId}>
-                                    {g.tagId} - {g.animalName}
+                                    {g.tagId}
                                 </option>
                             ))}
                         </select>
@@ -702,7 +699,7 @@ const AddAnimalForm = () => {
                             <option value="">Select Father</option>
                             {fatherSuggestions.map((g: any) => (
                                 <option key={g.tagId} value={g.tagId}>
-                                    {g.tagId} - {g.animalName}
+                                    {g.tagId}
                                 </option>
                             ))}
                         </select>
@@ -884,7 +881,7 @@ const AddAnimalForm = () => {
                                                     </button>
                                                     <div className="w-[2px] h-7 bg-gradient-to-b from-blue-500 to-red-500"></div>
                                                     <button
-                                                        onClick={() => deleteGoat(a.tagId)}
+                                                        onClick={() => deleteGoat(a._id)}
                                                         className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 cursor-pointer"
                                                     >
                                                         Delete
