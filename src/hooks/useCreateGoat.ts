@@ -8,7 +8,7 @@ export const useCreateGoat = () => {
         mutationFn: (goatData: any) => goatService.createGoat(goatData),
         onSuccess: (data) => {
 
-            console.log('✅ Goat created successfully:', data);
+            // console.log('✅ Goat created successfully:', data);
             queryClient.invalidateQueries({ queryKey: ["goats"] });
             // You can add a success toast here
         },

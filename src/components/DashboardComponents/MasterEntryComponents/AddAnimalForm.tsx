@@ -1,9 +1,6 @@
 import { useState, useMemo } from "react";
 import { Separator } from "@/components/ui/separator"
 import { X } from "lucide-react";
-// import Alert from '@mui/material/Alert';
-// import DeleteIcon from '@mui/icons-material/Delete';
-// import EditIcon from '@mui/icons-material/Edit';
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -29,6 +26,9 @@ interface FormData {
     partition: string;
     site: string;
     purchasePrice: number;
+    estimatedAgeYears: number;
+    estimatedAgeMonths: number;
+    estimatedAgeDays: number;
     purchaseFrom: string;
 }
 
@@ -86,6 +86,9 @@ const AddAnimalForm = () => {
             partition: '',
             site: '',
             purchasePrice: 0,
+            estimatedAgeYears: 0,
+            estimatedAgeMonths: 0,
+            estimatedAgeDays: 0,
             purchaseFrom: ''
         }
     });
@@ -204,8 +207,7 @@ const AddAnimalForm = () => {
 
         return true;
     };
-    // const purchaseType = watch('purchaseType');
-    // const gender = watch('gender');
+
 
     const purchaseType = useWatch({ control, name: "purchaseType" });
     const gender = useWatch({ control, name: "gender" });
@@ -259,6 +261,9 @@ const AddAnimalForm = () => {
         partition: '',
         site: '',
         purchasePrice: 0,
+        estimatedAgeYears: 0,
+        estimatedAgeMonths: 0,
+        estimatedAgeDays: 0,
         purchaseFrom: ''
     };
     const onSubmit = async (data: FormData) => {
@@ -326,6 +331,30 @@ const AddAnimalForm = () => {
             // PURCHASE TYPE: PURCHASE
             // ==========================
             if (data.purchaseType === "purchase") {
+                const years = data.estimatedAgeYears ?? 0;
+                const months = data.estimatedAgeMonths ?? 0;
+                const days = data.estimatedAgeDays ?? 0;
+
+                if (months > 11) {
+                    toast.error("Months must be between 0 and 11");
+                    return;
+                }
+                if (days > 30) {
+                    toast.error("Days must be between 0 and 30");
+                    return;
+                }
+
+                // Calculate estimated Date of Birth
+                const estimatedDOB = new Date(data.dateOfPurchase);
+                estimatedDOB.setFullYear(estimatedDOB.getFullYear() - years);
+                estimatedDOB.setMonth(estimatedDOB.getMonth() - months);
+                estimatedDOB.setDate(estimatedDOB.getDate() - days);
+
+                // Add Estimated fields for database
+                goatData.estimatedAgeYears = years;
+                goatData.estimatedAgeMonths = months;
+                goatData.estimatedAgeDays = days;
+
                 goatData.purchasePrice = data.purchasePrice
                     ? Number(data.purchasePrice)
                     : null;
@@ -341,6 +370,8 @@ const AddAnimalForm = () => {
                 delete goatData.motherId;
                 delete goatData.fatherId;
                 goatData.dateOfBirth = null;
+
+
             }
 
             // ==========================
@@ -370,7 +401,7 @@ const AddAnimalForm = () => {
             // CREATE
             // ==========================
             else {
-                console.log("Final Payload:", goatData);
+                // console.log("Final Payload:", goatData);
                 await createGoat.mutateAsync(goatData);
                 toast.success("Goat added successfully");
             }
@@ -392,7 +423,7 @@ const AddAnimalForm = () => {
         }
     };
     const handleEdit = (goat: any) => {
-        console.log("handleEdit=:", goat)
+        // console.log("handleEdit=:", goat)
         setShowModal(true);
         setEditGoat(goat);
         // console.log("editGoat=:", editGoat)
@@ -414,6 +445,9 @@ const AddAnimalForm = () => {
             dateOfBirth: goat.dateOfBirth?.split("T")[0],
             dateOfPurchase: goat.purchaseDate?.split("T")[0],
             kiddingCapacity: goat.kiddingCapacity,
+            estimatedAgeYears: goat.estimatedAgeYears ?? 0,
+            estimatedAgeMonths: goat.estimatedAgeMonths ?? 0,
+            estimatedAgeDays: goat.estimatedAgeDays ?? 0,
         });
     };
 
@@ -529,7 +563,60 @@ const AddAnimalForm = () => {
                             <span className="text-red-500 text-xs mt-1">{errors.dateOfPurchase.message}</span>
                         )}
                     </div>
+                    {/* Estimated age*/}
+                    <div className="grid grid-cols-3 gap-4">
 
+                        <div>
+                            <label className="block text-sm font-medium mb-2 text-xs font-semibold">
+                                Est. Age (Years)
+                            </label>
+                            <input
+                                type="number"
+                                min="0"
+                                placeholder="0"
+                                {...register("estimatedAgeYears", {
+                                    valueAsNumber: true,
+                                })}
+                                disabled={purchaseType === "own"}
+                                className={`border ${errors.estimatedAgeYears ? 'border-red-500' : 'border-gray-300'} rounded-md p-2 disabled:bg-gray-200 w-full`}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium mb-2 text-xs font-semibold">
+                                Est. Age (Months)
+                            </label>
+                            <input
+                                type="number"
+                                min="0"
+                                max="11"
+                                placeholder="0"
+                                {...register("estimatedAgeMonths", {
+                                    valueAsNumber: true,
+                                })}
+                                disabled={purchaseType === "own"}
+                                className={`border ${errors.estimatedAgeMonths ? 'border-red-500' : 'border-gray-300'} disabled:bg-gray-200 w-full rounded-lg p-2`}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium mb-2 text-xs font-semibold">
+                                Est. Age (Days)
+                            </label>
+                            <input
+                                type="number"
+                                min="0"
+                                max="30"
+                                placeholder="0"
+                                {...register("estimatedAgeDays", {
+                                    valueAsNumber: true,
+                                })}
+                                disabled={purchaseType === "own"}
+                                className={`border ${errors.estimatedAgeDays ? 'border-red-500' : 'border-gray-300'} disabled:bg-gray-200 w-full rounded-lg p-2`}
+                            />
+                        </div>
+                    </div>
+                    {/* <p className="mt-2 text-xs text-gray-500">
+                        Example: 0 years 8 months = animal is less than 1 year old.
+                    </p> */}
                     {/* Type */}
                     <div className="flex flex-col justify-center p-1">
                         <label htmlFor="type" className="font-medium">Type *</label>
@@ -766,6 +853,7 @@ const AddAnimalForm = () => {
                             <span className="text-red-500 text-xs mt-1">{errors.purchaseFrom.message}</span>
                         )}
                     </div>
+                    <br />
                     <button
                         type="submit"
                         disabled={
@@ -831,12 +919,11 @@ const AddAnimalForm = () => {
                                     <th className="border p-2">Site</th>
                                     <th className="border p-2">Partition</th>
                                     <th className="border p-2">Breed Type</th>
-                                    <th className="border p-2">Age</th>
                                     <th className="border p-2">Mother ID</th>
                                     <th className="border p-2">Father ID</th>
                                     <th className="border p-2">Purchase Type</th>
-
                                     <th className="border p-2">DOB</th>
+                                    <th className="border p-2">Age</th>
                                     <th className="border p-2">Purchase Date</th>
                                     <th className="border p-2">Purchase Price</th>
                                     <th className="border p-2">Purchase From</th>
@@ -844,6 +931,7 @@ const AddAnimalForm = () => {
                                 </tr>
                             </thead>
                             <tbody>
+                                {/* {console.log(goats)} */}
                                 {goats?.data?.length === 0 ? (
                                     <tr>
                                         <td colSpan={18} className="text-center p-4 text-gray-500">
@@ -864,11 +952,12 @@ const AddAnimalForm = () => {
                                             <td className="border p-1">{a.site}</td>
                                             <td className="border p-1">{a.partition}</td>
                                             <td className="border p-1">{a.breedType}</td>
-                                            <td className="border p-1">{a.age}</td>
+                                            {/* <td className="border p-1">{a.age}</td> */}
                                             <td className="border p-1">{formatField(a.motherId)}</td>
                                             <td className="border p-1">{formatField(a.fatherId)}</td>
                                             <td className="border p-1">{a.purchaseType}</td>
                                             <td className="border p-1">{formatField(a.dateOfBirth, true)}</td>
+                                            <td className="border p-1">{a.age?.display ?? '-'}</td>
                                             <td className="border p-1">{formatField(a.purchaseDate, true)}</td>
                                             <td className="border p-1">{formatField(a.purchasePrice)}</td>
                                             <td className="border p-1">{formatField(a.purchaseFrom)}</td>
