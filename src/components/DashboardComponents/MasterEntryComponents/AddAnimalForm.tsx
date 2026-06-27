@@ -212,20 +212,45 @@ const AddAnimalForm = () => {
     const purchaseType = useWatch({ control, name: "purchaseType" });
     const gender = useWatch({ control, name: "gender" });
     const currentTagId = useWatch({ control, name: "tagId" });
+
     const getMotherSuggestions = (goats: any[], currentTagId: string) => {
         return goats
-            ?.filter(g =>
-                g.gender?.toLowerCase() === "female" &&
-                String(g.tagId) !== String(currentTagId)
-            )
+            ?.filter(g => {
+                const years = g.estimatedAgeYears !== null && g.estimatedAgeYears !== undefined
+                    ? g.estimatedAgeYears
+                    : (g.age?.years ?? 0);
+                const months = g.estimatedAgeMonths !== null && g.estimatedAgeMonths !== undefined
+                    ? g.estimatedAgeMonths
+                    : (g.age?.months ?? 0);
+                const isMature = years >= 1 || months >= 7;
+
+                return (
+                    g.gender?.toLowerCase() === "female" &&
+                    g.type?.toLowerCase() === "doe" &&
+                    String(g.tagId) !== String(currentTagId) &&
+                    isMature
+                );
+            });
     };
     const getFatherSuggestions = (goats: any[], currentTagId: string) => {
+        console.log("ages:", goats);
         return goats
-            ?.filter(g =>
-                g.gender?.toLowerCase() === "male" &&
-                g.type?.toLowerCase() === "buk" &&
-                String(g.tagId) !== String(currentTagId)
-            )
+            ?.filter(g => {
+                const years = g.estimatedAgeYears !== null && g.estimatedAgeYears !== undefined
+                    ? g.estimatedAgeYears
+                    : (g.age?.years ?? 0);
+                const months = g.estimatedAgeMonths !== null && g.estimatedAgeMonths !== undefined
+                    ? g.estimatedAgeMonths
+                    : (g.age?.months ?? 0);
+                const isMature = years >= 1 || months >= 7;
+
+                return (
+                    g.gender?.toLowerCase() === "male" &&
+                    g.type?.toLowerCase() === "buk" &&
+                    String(g.tagId) !== String(currentTagId) &&
+                    isMature
+                );
+            });
     };
     const motherSuggestions = useMemo(() => {
         if (purchaseType !== "own") return [];
@@ -334,7 +359,7 @@ const AddAnimalForm = () => {
                 const years = data.estimatedAgeYears ?? 0;
                 const months = data.estimatedAgeMonths ?? 0;
                 const days = data.estimatedAgeDays ?? 0;
-
+                console.log("data:::", data);
                 if (months > 11) {
                     toast.error("Months must be between 0 and 11");
                     return;
@@ -887,7 +912,7 @@ const AddAnimalForm = () => {
                 <div className="flex justify-between items-center">
                     <h2 className="text-2xl my-2 font-bold">Animal List</h2>
                 </div>
-                <Separator />
+                {/* <Separator /> */}
                 <div className="max-h-[500px] overflow-y-auto">
                     {/* ✅ Loading */}
                     {isLoading && (
