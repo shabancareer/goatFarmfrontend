@@ -33,7 +33,7 @@ import d1 from "../../assets/goatsImgs/d-1.jpg";
 export default function Home() {
     const [activePage, setActivePage] = useState<DashboardPages>("General Dashboard")
     const pages: Partial<Record<DashboardPages, JSX.Element>> = {
-        "General Dashboard": <GeneralDashboard />,
+        "General Dashboard": <GeneralDashboard onNavigate={(page) => setActivePage(page)} />,
         "Tag Change": <TagChange />,
         "Manage Breeding": <BreedingRecord />,
         "Manage Animal": <AddAnimalForm />,

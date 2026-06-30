@@ -8,22 +8,27 @@ import ProfitThisMonth from "./ProfitThisMonth";
 import KidsBornThisMonth from "./KidsBornThisMonth";
 import GoatsReadyForBreeding from "./GoatsReadyForBreeding";
 import DailyFeedUses from "./DailyFeedUses";
+import type { DashboardPages } from "../types/dashboardPages";
 import TotalGoats from "./TotalSize";
 
-export default function GeneralDashboard() {
+type Props = {
+    onNavigate?: (page: DashboardPages) => void;
+};
+
+export default function GeneralDashboard({ onNavigate }: Props) {
     // const navigate = useNavigate();
-    const [activePage, setActivePage] = useState<GeneralDashboardPages>()
-    const pages: Partial<Record<GeneralDashboardPages, JSX.Element>> = {
-        "Sick Goats": <SickGoats />,
-        "Pregnant Goats": <PregnantGoats />,
-        "Feed Stock": <FeedStock />,
-        "Profit This Month": <ProfitThisMonth />,
-        "Kids Born This Month": <KidsBornThisMonth />,
-        "Goats Ready For Breeding": <GoatsReadyForBreeding />,
-        "Daily Feed Uses": <DailyFeedUses />,
-        // "GeneralDashboard": <GeneralDashboard />,
-        // other pages
-    };
+    // const [activePage, setActivePage] = useState<GeneralDashboardPages>()
+    // const pages: Partial<Record<GeneralDashboardPages, JSX.Element>> = {
+    //     "Sick Goats": <SickGoats />,
+    //     "Pregnant Goats": <PregnantGoats />,
+    //     "Feed Stock": <FeedStock />,
+    //     "Profit This Month": <ProfitThisMonth />,
+    //     "Kids Born This Month": <KidsBornThisMonth />,
+    //     "Goats Ready For Breeding": <GoatsReadyForBreeding />,
+    //     "Daily Feed Uses": <DailyFeedUses />,
+    //     // "GeneralDashboard": <GeneralDashboard />,
+    //     // other pages
+    // };
     return (
         <div className="relative h-full w-full overflow-hidden mb-10">
             {/* VIDEO BACKGROUND */}
@@ -44,7 +49,7 @@ export default function GeneralDashboard() {
             <div className="relative z-10 w-full">
                 <div className="backdrop-blur-md bg-white/10 shadow-xl mb-1 p-2">
                     <div className="grid grid-cols-8 gap-1 ">
-                        <TotalGoats />
+                        <TotalGoats onNavigate={onNavigate} />
                         <SickGoats />
                         <PregnantGoats />
                         <FeedStock />
