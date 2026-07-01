@@ -1,6 +1,7 @@
 // import { CloudCog } from "lucide-react";
+// import { useSelector } from "react-redux";
 import { api } from "./goatApi";
-
+// import { useAppSelector } from "../reduxHooks/hooks";
 export const goatService = {
     // Create new goat
     createGoat: async (goatData: any) => {
@@ -11,8 +12,10 @@ export const goatService = {
 };
 
 export const getAllGoats = async () => {
+    // const count = useAppSelector((state) => state.manageGoat.allGoats)
     const res = await api.get("/goats");
     return res.data;
+
 };
 
 export const deleteGoat = async (id: string | number) => {

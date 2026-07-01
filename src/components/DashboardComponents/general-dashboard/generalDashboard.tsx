@@ -1,6 +1,6 @@
-import { useState, type JSX } from "react";
+// import { useState, type JSX } from "react";
+// import type { GeneralDashboardPages } from "../types/GeneralDashboard";
 import v1 from "../../../assets/goatvideos/generalDashboard.mp4";
-import type { GeneralDashboardPages } from "../types/GeneralDashboard";
 import SickGoats from "./SickGoats";
 import PregnantGoats from "./PregnantGoats";
 import FeedStock from "./FeedStock";

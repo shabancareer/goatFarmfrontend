@@ -10,23 +10,29 @@ interface ManageGoat {
 const initialState: ManageGoat = {
     allGoats: [],
 }
-
+//no need to use redux for goats sharing in components use react query
 export const manageGoatSlice = createSlice({
     name: 'manageGoat',
     initialState,
     reducers: {
-        increment: (state) => {
-            state.allGoats.push(1)
+        addGoat: (state, action: PayloadAction<any>) => {
+            state.allGoats = [...state.allGoats, action.payload]
         },
-        decrement: (state) => {
-            state.allGoats.pop()
+        removeGoat: (state, action: PayloadAction<any>) => {
+            state.allGoats = state.allGoats.filter((goat: any) => goat !== action.payload)
         },
-        incrementByAmount: (state, action: PayloadAction<number>) => {
-            state.allGoats.push(action.payload)
+        updateGoat: (state, action: PayloadAction<any>) => {
+            state.allGoats = state.allGoats.map((goat: any) => goat.id === action.payload.id ? action.payload : goat)
+        },
+        getAllGoats: (state, action: PayloadAction<any>) => {
+            state.allGoats = action.payload
         }
+        // incrementByAmount: (state, action: PayloadAction<number>) => {
+        //     state.allGoats.push(action.payload)
+        // }
     }
 })
 
-export const { increment, decrement, incrementByAmount } = manageGoatSlice.actions
+export const { addGoat, removeGoat, updateGoat, getAllGoats } = manageGoatSlice.actions
 export const selectCount = (state: RootState) => state.manageGoat.allGoats
 export default manageGoatSlice.reducer
