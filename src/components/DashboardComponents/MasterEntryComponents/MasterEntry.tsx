@@ -25,8 +25,8 @@ export default function MasterEntry({ onNavigate }: Props) {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="overflow-y-auto">
                     <DropdownMenuGroup className="">
-                        <DropdownMenuItem className="child-cursor-pointer" onClick={() => onNavigate("Tag Change")}>Tag Change</DropdownMenuItem>
-                        <DropdownMenuSeparator />
+                        {/* <DropdownMenuItem className="child-cursor-pointer" onClick={() => onNavigate("Tag Change")}>Tag Change</DropdownMenuItem> */}
+                        {/* <DropdownMenuSeparator /> */}
                         <DropdownMenuItem className="child-cursor-pointer" onClick={() => onNavigate("Manage Animal")}>
                             Manage Animal
                         </DropdownMenuItem>
@@ -38,8 +38,8 @@ export default function MasterEntry({ onNavigate }: Props) {
                         <DropdownMenuItem className="child-cursor-pointer" onClick={() => onNavigate("Manage Weight")}>Manage weight</DropdownMenuItem>
                         <DropdownMenuSeparator />
 
-                        <DropdownMenuItem className="child-cursor-pointer" onClick={() => onNavigate("Manage Breed")}>Manage Breed</DropdownMenuItem>
-                        <DropdownMenuSeparator />
+                        {/* <DropdownMenuItem className="child-cursor-pointer" onClick={() => onNavigate("Manage Breed")}>Manage Breed</DropdownMenuItem> */}
+                        {/* <DropdownMenuSeparator /> */}
 
                         <DropdownMenuItem className="child-cursor-pointer" onClick={() => onNavigate("Manage Expense Type")}>Manage Expense type</DropdownMenuItem>
                         <DropdownMenuSeparator />

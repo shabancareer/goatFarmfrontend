@@ -50,11 +50,11 @@ export default function GeneralDashboard({ onNavigate }: Props) {
                 <div className="backdrop-blur-md bg-white/10 shadow-xl mb-1 p-2">
                     <div className="grid grid-cols-8 gap-1 ">
                         <TotalGoats onNavigate={onNavigate} />
-                        <SickGoats />
                         <PregnantGoats />
-                        <FeedStock />
-                        <KidsBornThisMonth />
                         <GoatsReadyForBreeding />
+                        <KidsBornThisMonth />
+                        <SickGoats />
+                        <FeedStock />
                         <DailyFeedUses />
                         <ProfitThisMonth />
                     </div>

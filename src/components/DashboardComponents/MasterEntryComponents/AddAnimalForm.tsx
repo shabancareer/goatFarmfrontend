@@ -1,4 +1,11 @@
 import { useState, useMemo } from "react";
+import {
+    flexRender,
+    getCoreRowModel,
+    useReactTable,
+    type ColumnDef,
+} from '@tanstack/react-table';
+
 import { Separator } from "@/components/ui/separator"
 import { X } from "lucide-react";
 import jsPDF from "jspdf";
@@ -9,6 +16,7 @@ import toast from "react-hot-toast";
 import { useWatch } from "react-hook-form";
 import { useCreateGoat, useGetAllGoats, useDeleteGoat, useUpdateGoat } from '@/hooks/useCreateGoat';
 // import { AnimalInterface } from '@/components/DashboardComponents/MasterEntryComponents/Interfaces/AnimalInterface';
+
 
 interface FormData {
     animalName: string;
@@ -32,6 +40,15 @@ interface FormData {
     purchaseFrom: string;
 }
 
+export interface GoatTableProps {
+    goats: { data: FormData[] } | null | undefined;
+    isLoading: boolean;
+    isError: boolean;
+    formatField: (value: any, isDate?: boolean) => string;
+    handleEdit: (goat: FormData) => void;
+    deleteGoat: (id: string) => void;
+}
+
 const formatField = (value: number | string | null, isDate = false) => {
     if (!value) return "-";
     if (isDate) {
@@ -53,6 +70,16 @@ const formatField = (value: number | string | null, isDate = false) => {
 const AddAnimalForm = () => {
     const { data: goats, isLoading, isError } = useGetAllGoats();
     const totalGoats = goats?.data?.length || 0;
+
+    const tableData = useMemo(() => {
+        if (!goats?.data) return [];
+        return [...goats.data].sort((a: any, b: any) => {
+            const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+            const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+            return dateB - dateA;
+        });
+    }, [goats?.data]);
+
     // console.log("TotalGoats:=", totalGoats);
     const [showModal, setShowModal] = useState(false);
     const [startDate, setStartDate] = useState('');
@@ -116,7 +143,7 @@ const AddAnimalForm = () => {
             "Purchase From"
         ];
         const tableRows: any[] = [];
-        goats?.data?.forEach((goat: any, index: number) => {
+        tableData.forEach((goat: any, index: number) => {
             console.log("Goat:=", goat);
             const row = [
                 index + 1,
@@ -233,7 +260,7 @@ const AddAnimalForm = () => {
             });
     };
     const getFatherSuggestions = (goats: any[], currentTagId: string) => {
-        console.log("ages:", goats);
+        // console.log("ages:", goats);
         return goats
             ?.filter(g => {
                 const years = g.estimatedAgeYears !== null && g.estimatedAgeYears !== undefined
@@ -418,7 +445,7 @@ const AddAnimalForm = () => {
                     id: editGoat.tagId,
                     ...goatData,
                 });
-
+                console.log("updateGoat.mutateAsync=:", goatData);
                 toast.success("Goat updated successfully");
             }
 
@@ -447,12 +474,11 @@ const AddAnimalForm = () => {
             );
         }
     };
+
     const handleEdit = (goat: any) => {
-        // console.log("handleEdit=:", goat)
+        // console.log("handleEdit=:", goat);
         setShowModal(true);
         setEditGoat(goat);
-        // console.log("editGoat=:", editGoat)
-        // populate form
         reset({
             animalName: goat.animalName,
             gender: goat.gender,
@@ -476,6 +502,128 @@ const AddAnimalForm = () => {
         });
     };
 
+    // Define TanStack Table Columns
+    const columns = useMemo<ColumnDef<any>[]>(() => [
+        {
+            id: "srNo",
+            header: "Sr#",
+            cell: (info) => info.row.index + 1,
+        },
+        {
+            accessorKey: "createdAt",
+            header: "Added Date",
+            cell: (info) => formatField(info.getValue() as string, true),
+        },
+        {
+            accessorKey: "tagId",
+            header: "Tag ID",
+        },
+        {
+            accessorKey: "gender",
+            header: "Gender",
+        },
+        {
+            accessorKey: "weight",
+            header: "Weight",
+        },
+        {
+            accessorKey: "kiddingCapacity",
+            header: "Kidding Capacity",
+            cell: (info) => formatField(info.getValue() as number),
+        },
+        {
+            accessorKey: "type",
+            header: "Animal Type",
+        },
+        {
+            accessorKey: "animalName",
+            header: "Animal Name",
+        },
+        {
+            accessorKey: "site",
+            header: "Site",
+        },
+        {
+            accessorKey: "partition",
+            header: "Partition",
+        },
+        {
+            accessorKey: "breedType",
+            header: "Breed Type",
+        },
+        {
+            accessorKey: "motherId",
+            header: "Mother ID",
+            cell: (info) => formatField(info.getValue() as string),
+        },
+        {
+            accessorKey: "fatherId",
+            header: "Father ID",
+            cell: (info) => formatField(info.getValue() as string),
+        },
+        {
+            accessorKey: "purchaseType",
+            header: "Purchase Type",
+        },
+        {
+            accessorKey: "dateOfBirth",
+            header: "DOB",
+            cell: (info) => formatField(info.getValue() as string, true),
+        },
+        {
+            id: "age",
+            header: "Age",
+            accessorFn: (row) => row.age?.display ?? "-",
+        },
+        {
+            accessorKey: "purchaseDate",
+            header: "Purchase Date",
+            cell: (info) => formatField(info.getValue() as string, true),
+        },
+        {
+            accessorKey: "purchasePrice",
+            header: "Purchase Price",
+            cell: (info) => formatField(info.getValue() as number),
+        },
+        {
+            accessorKey: "purchaseFrom",
+            header: "Purchase From",
+            cell: (info) => formatField(info.getValue() as string),
+        },
+        {
+            id: "actions",
+            header: "Actions",
+            cell: (info) => {
+                const a = info.row.original;
+                return (
+                    <div className="flex items-center justify-center gap-2">
+                        <button
+                            onClick={() => handleEdit(a)}
+                            className="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 cursor-pointer"
+                        >
+                            Edit
+                        </button>
+                        <div className="w-[2px] h-7 bg-gradient-to-b from-blue-500 to-red-500"></div>
+                        <button
+                            onClick={() => deleteGoat(a._id)}
+                            className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 cursor-pointer"
+                        >
+                            Delete
+                        </button>
+                    </div>
+                );
+            },
+        },
+    ], [handleEdit, deleteGoat]);
+
+
+
+    const table = useReactTable({
+        data: tableData,
+        columns,
+        getCoreRowModel: getCoreRowModel(),
+    });
+
     return (
         <div className="manage-animal-bg w-full h-full">
             <div className="p-4 flex flex-col items-center">
@@ -487,21 +635,21 @@ const AddAnimalForm = () => {
             <button
                 onClick={() => setShowModal(true)}
                 className="bg-blue-500 hover:bg-blue-600 cursor-pointer text-white font-bold py-2 px-4 mx-3 rounded">Add Animal</button>
-            {showModal && (<form onSubmit={handleSubmit(onSubmit)} className="p-10 absolute w-full rounded-lg shadow z-1">
+            {showModal && (<form onSubmit={handleSubmit(onSubmit)} className="p-4 md:p-10 absolute w-full rounded-lg shadow z-10">
 
                 {createGoat.isError && (
                     <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
                         Error: {createGoat.error?.response?.data?.message || 'Failed to add goat'}
                     </div>
                 )}
-                <div className="grid grid-cols-2 gap-2 border border-2 w-1/2 rounded-lg mx-auto bg-white shadow-lg p-8">
+                <div className="relative grid grid-cols-1 md:grid-cols-2 gap-4 border-2 w-full max-w-4xl rounded-lg mx-auto bg-white shadow-lg p-6 md:p-8">
                     <button
                         onClick={() => {
                             setShowModal(false);
                             setEditGoat(null);
                             reset(emptyFormValues);
                         }}
-                        className="w-10 h-10 mt-[-10px] mb-[-10px] flex items-center justify-center absolute right-180 bg-gradient-to-b from-blue-500 to-red-500 hover:from-red-500 hover:to-blue-500 cursor-pointer text-white rounded-md"
+                        className="w-10 h-10 flex items-center justify-center absolute top-2 right-2 bg-gradient-to-b from-blue-500 to-red-500 hover:from-red-500 hover:to-blue-500 cursor-pointer text-white rounded-md z-20"
                     >
                         <X />
                     </button>
@@ -878,7 +1026,6 @@ const AddAnimalForm = () => {
                             <span className="text-red-500 text-xs mt-1">{errors.purchaseFrom.message}</span>
                         )}
                     </div>
-                    <br />
                     <button
                         type="submit"
                         disabled={
@@ -886,7 +1033,7 @@ const AddAnimalForm = () => {
                             updateGoat.isPending ||
                             isSubmitting
                         }
-                        className="mt-4 bg-blue-500 w-1/2 mx-auto hover:bg-blue-600 text-white p-3 rounded-md font-medium disabled:opacity-50"
+                        className="mt-4 bg-blue-500 w-full md:w-1/2 md:col-span-2 mx-auto hover:bg-blue-600 text-white p-3 rounded-md font-medium disabled:opacity-50"
                     >
                         {editGoat
                             ? (updateGoat.isPending ? "Updating..." : "Update")
@@ -898,22 +1045,22 @@ const AddAnimalForm = () => {
             </form>
             )}
             <div className="mx-2 mt-4 bg-white w-full">
-                <div className="flex  flex-row gap-3 m-2 rounded-md p-8 w-1/4">
-                    <div className="">
-                        <label className="text-xl font-bold" htmlFor="startDate">Start Date:</label>
-                        <input className="border border-gray-300 hover:border-gray-500 rounded-md p-10" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                <div className="flex flex-col sm:flex-row gap-3 m-2 rounded-md p-4 sm:p-8 w-full sm:w-auto">
+                    <div className="flex flex-col">
+                        <label className="text-lg md:text-xl font-bold" htmlFor="startDate">Start Date:</label>
+                        <input className="border border-gray-300 hover:border-gray-500 rounded-md p-2 md:p-3" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
                     </div>
-                    <div>
-                        <label className="text-xl font-bold" htmlFor="endDate">End Date:</label>
-                        <input className="border border-gray-300 hover:border-gray-500 rounded-md p-10" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+                    <div className="flex flex-col">
+                        <label className="text-lg md:text-xl font-bold" htmlFor="endDate">End Date:</label>
+                        <input className="border border-gray-300 hover:border-gray-500 rounded-md p-2 md:p-3" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
                     </div>
                     {/* <button onClick={() => fetchAnimals()}>Filter</button> */}
                 </div>
-                <div className="flex justify-between items-center">
+                <div className="flex justify-between items-center px-4">
                     <h2 className="text-2xl my-2 font-bold">Animal List</h2>
                 </div>
                 {/* <Separator /> */}
-                <div className="max-h-[500px] overflow-y-auto">
+                <div className="max-h-[500px] overflow-y-auto overflow-x-auto w-full border border-gray-300 rounded-md">
                     {/* ✅ Loading */}
                     {isLoading && (
                         <div className="flex justify-center items-center h-40">
@@ -928,80 +1075,43 @@ const AddAnimalForm = () => {
                         </div>
                     )}
 
-                    {/* ✅ Table */}
+                    {/* ✅ TanStack Table */}
                     {!isLoading && !isError && (
-                        <table className="w-full border border-gray-300 border-collapse">
+                        <table className="w-full min-w-max border border-gray-300 border-collapse">
                             <thead className="bg-blue-400 sticky top-0 z-0">
-                                <tr>
-                                    <th className="border p-2">Sr#</th>
-                                    <th className="border p-2">Added Date</th>
-                                    <th className="border p-2">Tag ID</th>
-                                    <th className="border p-2">Gender</th>
-                                    <th className="border p-2">Weight</th>
-                                    <th className="border p-2">Kidding Capacity</th>
-                                    <th className="border p-2">Animal Type</th>
-                                    <th className="border p-2">Animal Name</th>
-                                    <th className="border p-2">Site</th>
-                                    <th className="border p-2">Partition</th>
-                                    <th className="border p-2">Breed Type</th>
-                                    <th className="border p-2">Mother ID</th>
-                                    <th className="border p-2">Father ID</th>
-                                    <th className="border p-2">Purchase Type</th>
-                                    <th className="border p-2">DOB</th>
-                                    <th className="border p-2">Age</th>
-                                    <th className="border p-2">Purchase Date</th>
-                                    <th className="border p-2">Purchase Price</th>
-                                    <th className="border p-2">Purchase From</th>
-                                    <th className="border p-2">Actions</th>
-                                </tr>
+                                {table.getHeaderGroups().map((headerGroup) => (
+                                    <tr key={headerGroup.id}>
+                                        {headerGroup.headers.map((header) => (
+                                            <th key={header.id} className="border p-2">
+                                                {header.isPlaceholder
+                                                    ? null
+                                                    : flexRender(
+                                                        header.column.columnDef.header,
+                                                        header.getContext()
+                                                    )}
+                                            </th>
+                                        ))}
+                                    </tr>
+                                ))}
                             </thead>
                             <tbody>
-                                {/* {console.log(goats)} */}
-                                {goats?.data?.length === 0 ? (
+                                {table.getRowModel().rows.length === 0 ? (
                                     <tr>
-                                        <td colSpan={18} className="text-center p-4 text-gray-500">
+                                        <td colSpan={columns.length} className="text-center p-4 text-gray-500">
                                             No goats found 🐐
                                         </td>
                                     </tr>
                                 ) : (
-                                    goats?.data?.map((a: any, i: number) => (
-                                        <tr key={a._id || a.tagId || i} className="text-center">
-                                            <td className="border p-1">{i + 1}</td>
-                                            <td className="border p-1">{formatField(a.createdAt, true)}</td>
-                                            <td className="border p-1">{a.tagId}</td>
-                                            <td className="border p-1">{a.gender}</td>
-                                            <td className="border p-1">{a.weight}</td>
-                                            <td className="border p-1">{formatField(a.kiddingCapacity)}</td>
-                                            <td className="border p-1">{a.type}</td>
-                                            <td className="border p-1">{a.animalName}</td>
-                                            <td className="border p-1">{a.site}</td>
-                                            <td className="border p-1">{a.partition}</td>
-                                            <td className="border p-1">{a.breedType}</td>
-                                            {/* <td className="border p-1">{a.age}</td> */}
-                                            <td className="border p-1">{formatField(a.motherId)}</td>
-                                            <td className="border p-1">{formatField(a.fatherId)}</td>
-                                            <td className="border p-1">{a.purchaseType}</td>
-                                            <td className="border p-1">{formatField(a.dateOfBirth, true)}</td>
-                                            <td className="border p-1">{a.age?.display ?? '-'}</td>
-                                            <td className="border p-1">{formatField(a.purchaseDate, true)}</td>
-                                            <td className="border p-1">{formatField(a.purchasePrice)}</td>
-                                            <td className="border p-1">{formatField(a.purchaseFrom)}</td>
-                                            <td className="border p-1">
-                                                <div className="flex items-center justify-center gap-2">
-                                                    <button
-                                                        onClick={() => handleEdit(a)}
-                                                        className="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 cursor-pointer">
-                                                        Edit
-                                                    </button>
-                                                    <div className="w-[2px] h-7 bg-gradient-to-b from-blue-500 to-red-500"></div>
-                                                    <button
-                                                        onClick={() => deleteGoat(a._id)}
-                                                        className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 cursor-pointer"
-                                                    >
-                                                        Delete
-                                                    </button>
-                                                </div>
-                                            </td>
+                                    table.getRowModel().rows.map((row) => (
+                                        <tr key={row.id} className="text-center">
+                                            {row.getVisibleCells().map((cell) => (
+                                                <td key={cell.id} className="border p-1">
+                                                    {flexRender(
+                                                        cell.column.columnDef.cell,
+                                                        cell.getContext()
+                                                    )}
+                                                </td>
+                                            ))}
                                         </tr>
                                     ))
                                 )}
