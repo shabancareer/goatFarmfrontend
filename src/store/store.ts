@@ -1,7 +1,7 @@
 import { configureStore } from '@reduxjs/toolkit'
-import manageGoatReducer from '../features/manageGoats/manageGoatSlice'
-import authReducer from '../features/auth/slice/auth.slice';
-import { injectStore } from '../services/api';
+import manageGoatReducer from './slices/manageGoat/manageGoatSlice'
+import authReducer from './slices/auth/auth.slice';
+import { injectStore } from '../shared/api/api';
 
 export const store = configureStore({
   reducer:
