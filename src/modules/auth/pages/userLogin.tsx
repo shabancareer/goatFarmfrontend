@@ -1,21 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-
-import { registerSuperOwner } from '../../../store/thunks/auth/auth.thunks';
-import type { AppDispatch, RootState } from '../../../store/store';
-import { clearError } from '../../../store/slices/auth/auth.slice';
-import { useNavigate } from 'react-router-dom';
-import d1 from "../../../assets/goatsImgs/d-1.jpg";
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
-// ---- Small inline icons (no external icon package required) ----
+import { login } from '../../../store/thunks/auth/auth.thunks';
+import type { AppDispatch, RootState } from '../../../store/store';
+import { clearError } from '../../../store/slices/auth/auth.slice';
+import d1 from '../../../assets/goatsImgs/d-1.jpg';
 
-const IconUser = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" {...props}>
-        <circle cx="12" cy="8" r="3.5" />
-        <path d="M5 20c0-3.6 3.1-6.5 7-6.5s7 2.9 7 6.5" />
-    </svg>
-);
+// ---- Small inline icons ----
 
 const IconMail = (props: React.SVGProps<SVGSVGElement>) => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" {...props}>
@@ -28,14 +21,6 @@ const IconLock = (props: React.SVGProps<SVGSVGElement>) => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" {...props}>
         <rect x="5" y="11" width="14" height="9" rx="2" />
         <path d="M8 11V8a4 4 0 0 1 8 0v3" />
-    </svg>
-);
-
-const IconBuilding = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" {...props}>
-        <rect x="4" y="3" width="9" height="18" rx="1" />
-        <rect x="13" y="9" width="7" height="12" rx="1" />
-        <path d="M7.5 7h2M7.5 11h2M7.5 15h2" />
     </svg>
 );
 
@@ -53,7 +38,6 @@ const IconEyeOff = (props: React.SVGProps<SVGSVGElement>) => (
     </svg>
 );
 
-// Hoofprint used as the feature-list bullet / motion marker
 const IconHoof = (props: React.SVGProps<SVGSVGElement>) => (
     <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
         <ellipse cx="12" cy="14.5" rx="5" ry="4.2" />
@@ -64,135 +48,112 @@ const IconHoof = (props: React.SVGProps<SVGSVGElement>) => (
     </svg>
 );
 
-export default function Register() {
+const IconCheckCircle = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" {...props}>
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+        <polyline points="22 4 12 14.01 9 11.01" />
+    </svg>
+);
+
+export const UserLogin: React.FC = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch<AppDispatch>();
-    const { status, error } = useSelector(
-        (state: RootState) => state.auth
-    );
+    const [searchParams] = useSearchParams();
+
+    const { status, error } = useSelector((state: RootState) => state.auth);
+    const isLoading = status === 'loading';
+
     const [formData, setFormData] = useState({
-        name: '',
         email: '',
         password: '',
-        organizationName: '',
     });
     const [showPassword, setShowPassword] = useState(false);
+    const [isVerifiedNotice, setIsVerifiedNotice] = useState(false);
 
-    const handleChange = (
-        e: React.ChangeEvent<HTMLInputElement>
-    ) => {
+    useEffect(() => {
+        if (searchParams.get('verified') === 'true') {
+            setIsVerifiedNotice(true);
+            toast.success('Email verified successfully! Please log in.');
+        }
+    }, [searchParams]);
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData({
             ...formData,
             [e.target.name]: e.target.value,
         });
     };
 
-    const handleSubmit = async (
-        e: React.FormEvent<HTMLFormElement>
-    ) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
         try {
-            const userEmail = formData.email;
-            const result = await dispatch(
-                registerSuperOwner(formData)
-            );
+            const result = await dispatch(login(formData));
 
-            if (registerSuperOwner.fulfilled.match(result)) {
-                toast.success('Registration successful! Please check your email.');
-                setFormData({
-                    name: '',
-                    email: '',
-                    password: '',
-                    organizationName: '',
-                });
-                navigate('/auth/verify-email/pending', { state: { email: userEmail } });
-            } else if (registerSuperOwner.rejected.match(result)) {
-                toast.error((result.payload as string) || 'Registration failed!');
+            if (login.fulfilled.match(result)) {
+                toast.success('Logged in successfully!');
+                dispatch(clearError());
+                navigate('/dashboard');
+            } else if (login.rejected.match(result)) {
+                toast.error((result.payload as string) || 'Login failed. Please check your credentials.');
             }
         } catch (err) {
-            console.error(err);
-            dispatch(clearError());
-            toast.error('Registration failed!');
+            toast.error('An unexpected error occurred.');
         }
     };
 
-    const isLoading = status === 'loading';
-
-    const fields = [
-        { name: 'name', label: 'Full Name', type: 'text', placeholder: 'John Doe', icon: IconUser },
-        { name: 'email', label: 'Email Address', type: 'email', placeholder: 'john@example.com', icon: IconMail },
-        { name: 'organizationName', label: 'Organization Name', type: 'text', placeholder: 'Acme Farms', icon: IconBuilding },
-    ] as const;
-
-    const features = [
-        'Track herd health & vaccination schedules',
-        'Manage breeding records and lineage',
-        'Coordinate your whole farm team in one place',
-    ];
-
     return (
-        <div className="min-h-screen w-full flex bg-stone-50">
-            {/* local keyframes for the goat-farm motion touches */}
-            <style>{`
-                @keyframes pasturePan {
-                    0% { background-position: 50% 50%; }
-                    100% { background-position: 56% 46%; }
-                }
-                @keyframes stepIn {
-                    from { opacity: 0; transform: translateX(-8px); }
-                    to { opacity: 1; transform: translateX(0); }
-                }
-                .pasture-bg { animation: pasturePan 18s ease-in-out infinite alternate; }
-                .step-in { animation: stepIn 0.5s ease-out both; }
-            `}</style>
-
-            {/* LEFT — brand / story panel */}
-            <div className="hidden lg:flex lg:w-[44%] relative overflow-hidden">
+        <div className="min-h-screen flex bg-gradient-to-br from-amber-50/40 via-stone-100 to-emerald-900/10">
+            {/* LEFT — branding / hero panel matching Register page */}
+            <div className="hidden lg:flex lg:w-1/2 relative bg-emerald-950 text-white flex-col justify-between overflow-hidden p-12">
                 <div
-                    className="absolute inset-0 pasture-bg"
-                    style={{
-                        backgroundImage: `url(${d1})`,
-                        backgroundSize: "cover",
-                        backgroundPosition: "center",
-                    }}
+                    className="absolute inset-0 bg-cover bg-center opacity-30 mix-blend-overlay"
+                    style={{ backgroundImage: `url(${d1})` }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-br from-emerald-950/90 via-emerald-900/80 to-emerald-800/70" />
 
-                <div className="relative z-10 flex flex-col justify-between p-12 text-white w-full">
-                    <div className="flex items-center gap-2.5">
-                        <div className="h-9 w-9 rounded-full bg-amber-400/20 ring-1 ring-amber-300/40 flex items-center justify-center">
-                            <IconHoof className="h-5 w-5 text-amber-300" />
-                        </div>
-                        <span className="font-semibold tracking-wide text-emerald-50/90 text-sm uppercase">
-                            Herd Manager
-                        </span>
+                {/* Subtle gradient overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-emerald-950 via-emerald-950/70 to-emerald-900/40" />
+
+                {/* Top branding */}
+                <div className="relative z-10 flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-emerald-800/80 border border-emerald-600/50 flex items-center justify-center shadow-inner">
+                        <IconHoof className="h-5 w-5 text-amber-400" />
                     </div>
+                    <span className="font-serif text-xl tracking-wider text-amber-100 font-semibold">
+                        GOAT FARM OS
+                    </span>
+                </div>
 
-                    <div>
-                        <h2 className="text-4xl font-serif font-semibold leading-tight mb-4">
-                            Welcome to<br />the Herd.
-                        </h2>
-                        <p className="text-emerald-100/80 mb-10 max-w-sm leading-relaxed">
-                            Set up your organization and start managing your goat farm
-                            with confidence — from kidding season to market day.
-                        </p>
+                {/* Center hero text */}
+                <div className="relative z-10 max-w-md my-auto">
+                    <span className="inline-block px-3 py-1 bg-emerald-900/80 border border-emerald-700/60 rounded-full text-xs font-medium tracking-wide text-amber-300 uppercase mb-4">
+                        Management System
+                    </span>
+                    <h2 className="text-4xl font-serif font-bold leading-tight text-stone-100">
+                        Welcome Back to Your Herd
+                    </h2>
+                    <p className="mt-4 text-stone-300 text-base leading-relaxed">
+                        Access your farm dashboard, monitor animals, track breeding cycles, and manage team permissions seamlessly.
+                    </p>
 
-                        <ul className="space-y-4">
-                            {features.map((f, i) => (
-                                <li
-                                    key={f}
-                                    className="step-in flex items-start gap-3 text-emerald-50/90"
-                                    style={{ animationDelay: `${i * 150}ms` }}
-                                >
-                                    <IconHoof className="h-5 w-5 mt-0.5 text-amber-300 shrink-0 -rotate-12" />
-                                    <span className="text-sm leading-relaxed">{f}</span>
-                                </li>
-                            ))}
-                        </ul>
+                    <div className="mt-8 space-y-3.5 border-t border-emerald-800/60 pt-6">
+                        {[
+                            'Real-time herd statistics & analytics',
+                            'Automated health & breeding schedules',
+                            'Role-based access & team management',
+                        ].map((item, idx) => (
+                            <div key={idx} className="flex items-center gap-3 text-stone-300 text-sm">
+                                <span className="h-5 w-5 rounded-full bg-emerald-800/60 flex items-center justify-center text-amber-300 text-xs font-bold">
+                                    ✓
+                                </span>
+                                <span>{item}</span>
+                            </div>
+                        ))}
                     </div>
+                </div>
 
-                    {/* simple pasture / fence-line illustration */}
+                {/* Bottom pasture decoration */}
+                <div className="relative z-10 border-t border-emerald-900/80 pt-4">
                     <svg viewBox="0 0 400 90" className="w-full h-auto opacity-80" preserveAspectRatio="none">
                         <path d="M0 70 Q100 40 200 60 T400 50 V90 H0 Z" fill="#0f3d2a" opacity="0.6" />
                         {[20, 70, 120, 170, 220, 270, 320, 370].map((x) => (
@@ -217,38 +178,48 @@ export default function Register() {
 
                     <div className="mb-7">
                         <h1 className="text-3xl font-serif font-semibold text-emerald-950">
-                            Create Account
+                            Sign In
                         </h1>
                         <p className="text-stone-500 mt-2 text-[15px]">
-                            Register your organization and start managing your team.
+                            Enter your email and password to access your farm dashboard.
                         </p>
                     </div>
 
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        {fields.map(({ name, label, type, placeholder, icon: Icon }) => (
-                            <div key={name}>
-                                <label className="block text-sm font-medium text-stone-700 mb-1.5">
-                                    {label}
-                                </label>
-                                <div className="relative">
-                                    <Icon className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-emerald-700/60" />
-                                    <input
-                                        type={type}
-                                        name={name}
-                                        value={formData[name]}
-                                        onChange={handleChange}
-                                        required
-                                        className="w-full border border-stone-300 rounded-lg pl-10 pr-4 py-3 text-stone-800 placeholder:text-stone-400 focus:ring-2 focus:ring-emerald-700/40 focus:border-emerald-700 focus:outline-none transition"
-                                        placeholder={placeholder}
-                                    />
-                                </div>
+                    {isVerifiedNotice && (
+                        <div className="mb-6 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg p-3.5 text-sm flex items-start gap-3">
+                            <IconCheckCircle className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
+                            <div>
+                                <p className="font-semibold text-emerald-900">Email Verified Successfully!</p>
+                                <p className="text-emerald-700 text-xs mt-0.5">Your email address has been verified. You can now log in to your account.</p>
                             </div>
-                        ))}
+                        </div>
+                    )}
 
+                    <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
                             <label className="block text-sm font-medium text-stone-700 mb-1.5">
-                                Password
+                                Email Address
                             </label>
+                            <div className="relative">
+                                <IconMail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-emerald-700/60" />
+                                <input
+                                    type="email"
+                                    name="email"
+                                    value={formData.email}
+                                    onChange={handleChange}
+                                    required
+                                    className="w-full border border-stone-300 rounded-lg pl-10 pr-4 py-3 text-stone-800 placeholder:text-stone-400 focus:ring-2 focus:ring-emerald-700/40 focus:border-emerald-700 focus:outline-none transition"
+                                    placeholder="john@example.com"
+                                />
+                            </div>
+                        </div>
+
+                        <div>
+                            <div className="flex items-center justify-between mb-1.5">
+                                <label className="block text-sm font-medium text-stone-700">
+                                    Password
+                                </label>
+                            </div>
                             <div className="relative">
                                 <IconLock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-emerald-700/60" />
                                 <input
@@ -257,7 +228,6 @@ export default function Register() {
                                     value={formData.password}
                                     onChange={handleChange}
                                     required
-                                    minLength={6}
                                     className="w-full border border-stone-300 rounded-lg pl-10 pr-11 py-3 text-stone-800 placeholder:text-stone-400 focus:ring-2 focus:ring-emerald-700/40 focus:border-emerald-700 focus:outline-none transition"
                                     placeholder="********"
                                 />
@@ -289,11 +259,11 @@ export default function Register() {
                                         <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="3" opacity="0.25" />
                                         <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
                                     </svg>
-                                    Creating Account...
+                                    Signing In...
                                 </>
                             ) : (
                                 <>
-                                    Register
+                                    Sign In
                                     <IconHoof className="h-4 w-4 text-amber-300 transition-transform group-hover:translate-x-1" />
                                 </>
                             )}
@@ -301,17 +271,17 @@ export default function Register() {
                     </form>
 
                     <p className="text-center text-sm text-stone-500 mt-6">
-                        Already have an account?{' '}
+                        Don't have an account?{' '}
                         <button
                             type="button"
-                            onClick={() => navigate('/auth/login')}
+                            onClick={() => navigate('/auth/register')}
                             className="text-emerald-800 font-medium hover:underline"
                         >
-                            Sign in
+                            Create an account
                         </button>
                     </p>
                 </div>
             </div>
         </div>
     );
-}
+};

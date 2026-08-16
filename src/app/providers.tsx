@@ -3,7 +3,7 @@ import { Provider } from 'react-redux';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { Toaster } from 'react-hot-toast';
-import { store } from '../store/store';
+import { store } from '../store';
 
 const queryClient = new QueryClient();
 

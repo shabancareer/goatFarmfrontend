@@ -18,6 +18,11 @@ export const authService = {
         await api.post('/auth/logout');
     },
 
+    refreshToken: async () => {
+        const res = await api.post('/auth/refresh');
+        return res.data;
+    },
+
     getMe: async (): Promise<User> => {
         const res = await api.get('/auth/me');
         return res.data;

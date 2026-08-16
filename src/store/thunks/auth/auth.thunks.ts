@@ -1,4 +1,5 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
+import { tokenRefreshed } from '../../slices/auth/auth.slice';
 import { profileService } from '../../../shared/api/profileService';
 import { authService } from '../../../shared/api/authService';
 import type {
@@ -42,6 +43,21 @@ export const logout = createAsyncThunk(
     async () => {
         try { await authService.logout(); }
         catch { /* always clear local state */ }
+    },
+);
+
+export const refreshSession = createAsyncThunk(
+    'auth/refreshSession',
+    async (_, { dispatch, rejectWithValue }) => {
+        try {
+            const refreshRes = await authService.refreshToken();
+            dispatch(tokenRefreshed(refreshRes));
+            // Ensure getMe() sends the fresh access token in the Authorization header
+            const user = await authService.getMe();
+            return { ...refreshRes, user };
+        } catch (err) {
+            return rejectWithValue(errMsg(err));
+        }
     },
 );
 

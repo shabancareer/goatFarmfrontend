@@ -1,4 +1,4 @@
-import type { RootState } from '../../../store/store';
+import type { RootState } from '../../index';
 import { Permission, Role } from '../../../types';
 
 // ─────────────────────────────────────────────────────────────────────────────

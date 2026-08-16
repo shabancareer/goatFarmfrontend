@@ -8,9 +8,9 @@ export function injectStore(store: any) {
 }
 
 export const api: AxiosInstance = axios.create({
-    // baseURL: import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api/v1/',
     baseURL: import.meta.env.VITE_API_URL ?? 'http://localhost:3000/',
     headers: { 'Content-Type': 'application/json' },
+    withCredentials: true,
 });
 
 // ── Attach access token to every request ─────────────────────────────────────
@@ -36,12 +36,6 @@ api.interceptors.response.use(
         if (error.response?.status !== 401 || original._retry) return Promise.reject(error);
         original._retry = true;
 
-        const refreshToken = _store?.getState()?.auth?.refreshToken;
-        if (!refreshToken) {
-            _store?.dispatch({ type: 'auth/logout/fulfilled' });
-            return Promise.reject(error);
-        }
-
         if (isRefreshing) {
             return new Promise((resolve, reject) => queue.push({ resolve, reject }))
                 .then((newToken) => {
@@ -53,9 +47,9 @@ api.interceptors.response.use(
         isRefreshing = true;
         try {
             const { data } = await axios.post(
-                `${api.defaults.baseURL}`,
+                `${api.defaults.baseURL}auth/refresh`,
                 {},
-                { headers: { Authorization: `Bearer ${refreshToken}` } },
+                { withCredentials: true },
             );
             _store?.dispatch({ type: 'auth/tokenRefreshed', payload: data });
             flushQueue(null, data.accessToken);
