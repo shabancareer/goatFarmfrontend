@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
+// import { useState } from 'react';
 import { Button } from "@/shared/components/ui/button";
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuGroup,
     DropdownMenuItem,
-    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/shared/components/ui/dropdown-menu";
 
@@ -24,7 +23,7 @@ export default function OrganisationManagement({ onNavigate }: Props) {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="overflow-y-auto">
                     <DropdownMenuGroup>
-                        <DropdownMenuItem 
+                        <DropdownMenuItem
                             className="child-cursor-pointer"
                             onClick={() => onNavigate?.("Organisation Management")}
                         >

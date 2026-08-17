@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+// import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { setCurrentOrganization, type OrganizationInfo } from '../../store/organization/organizationSlice';
 import type { RootState, AppDispatch } from '../../store/store';
@@ -13,10 +13,10 @@ export default function OrganizationSwitcher() {
         id: org.id,
         name: org.name,
     })) || [
-        { id: user?.orgId || 'org_1', name: 'Main Goat Farm (Primary)' },
-        { id: 'org_2', name: 'West Pasture Farm (Branch B)' },
-        { id: 'org_3', name: 'Valley Breeding Center' },
-    ];
+            { id: user?.orgId || 'org_1', name: 'Main Goat Farm (Primary)' },
+            { id: 'org_2', name: 'West Pasture Farm (Branch B)' },
+            { id: 'org_3', name: 'Valley Breeding Center' },
+        ];
 
     const activeOrg = currentOrganization || mockFarms[0];
 
