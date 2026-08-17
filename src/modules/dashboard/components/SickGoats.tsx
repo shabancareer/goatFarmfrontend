@@ -13,11 +13,11 @@ export default function SickGoats() {
     ];
 
     return (
-        <div className="bg-white w-[200px] h-[100px] shadow-md rounded-2xl flex items-center justify-center text-center font-semibold text-gray-700 hover:shadow-xl hover:scale-105 transition duration-200 cursor-pointer">
-            <LineChart style={{ width: '100%', aspectRatio: 1.618, maxWidth: 800, margin: 'auto' }} responsive data={data}>
+        <div className="w-full h-full flex items-center justify-center p-2 relative overflow-hidden">
+            <LineChart style={{ width: '100%', height: '100%', maxWidth: '100%', margin: 'auto' }} responsive data={data}>
                 <CartesianGrid stroke="var(--color-border-3)" strokeDasharray="5 5" />
-                <XAxis dataKey="name" stroke="var(--color-text-3)" />
-                <YAxis width="auto" stroke="var(--color-text-3)" />
+                <XAxis dataKey="name" stroke="var(--color-text-3)" tick={{ fontSize: 10 }} />
+                <YAxis width={30} stroke="var(--color-text-3)" tick={{ fontSize: 10 }} />
                 <Line
                     type="monotone"
                     dataKey="uv"
@@ -42,7 +42,6 @@ export default function SickGoats() {
                 />
                 <RechartsDevtools />
             </LineChart>
-
         </div>
     );
 }

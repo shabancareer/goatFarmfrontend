@@ -1,13 +1,15 @@
 import { configureStore } from '@reduxjs/toolkit'
 import manageGoatReducer from './slices/manageGoat/manageGoatSlice'
 import authReducer from './slices/auth/auth.slice';
+import organizationReducer from './organization/organizationSlice';
 import { injectStore } from '../shared/api/api';
 
 export const store = configureStore({
   reducer:
   {
     manageGoat: manageGoatReducer,
-    auth: authReducer
+    auth: authReducer,
+    organization: organizationReducer,
   },
 })
 

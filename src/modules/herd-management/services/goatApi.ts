@@ -1,13 +1,4 @@
-import axios from 'axios';
-
-const API_BASE_URL = 'http://localhost:3000/'; // Update with your backend URL
-
-export const api = axios.create({
-    baseURL: API_BASE_URL,
-    headers: {
-        'Content-Type': 'application/json',
-    },
-});
+export { api } from '../../../shared/api/api';
 
 // export const goatApi = {
 //     // Create new goat

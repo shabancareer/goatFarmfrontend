@@ -16,7 +16,21 @@ export const store = configureStore({
     organization: organizationReducer,
     filters: filterReducer,
   },
-  devTools: import.meta.env.DEV,
+  devTools: import.meta.env.DEV ? {
+    maxAge: 25, // limit action history depth to conserve memory
+    latency: 500,
+    actionSanitizer: (action: any) => {
+      // Sanitize large payloads (e.g. photos/base64, large lists)
+      if (action.type?.includes('uploadPhoto') || action.type?.includes('login')) {
+        return { ...action, payload: '<<LARGE_PAYLOAD_TRUNCATED>>' };
+      }
+      return action;
+    },
+    stateSanitizer: (state: any) => {
+      // Truncate large state properties if needed for devtools display
+      return state;
+    },
+  } : false,
 });
 
 injectStore(store);

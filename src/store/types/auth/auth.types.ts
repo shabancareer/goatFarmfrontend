@@ -19,7 +19,7 @@ export const authInitialState: AuthState = {
     refreshToken: null,
     expiresAt: null,
     orgUsers: [],
-    status: 'idle',
+    status: 'loading',
     error: null,
 };
 

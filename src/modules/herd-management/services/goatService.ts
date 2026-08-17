@@ -1,6 +1,6 @@
 // import { CloudCog } from "lucide-react";
 // import { useSelector } from "react-redux";
-import { api } from "./goatApi";
+import { api } from "../../../shared/api/api";
 // import { useAppSelector } from "../reduxHooks/hooks";
 export const goatService = {
     // Create new goat

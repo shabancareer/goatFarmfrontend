@@ -2,7 +2,7 @@ import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../../store/store';
-import { Role, type Role as RoleType } from '../../types/shared.types';
+import type { Role as RoleType } from '../../types/shared.types';
 
 interface ProtectedRouteProps {
   allowedRoles?: RoleType[];

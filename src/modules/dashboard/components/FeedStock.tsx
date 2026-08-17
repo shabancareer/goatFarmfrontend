@@ -1,6 +1,6 @@
 export default function FeedStock() {
     return (
-        <div className="bg-white w-[200px] h-[100px] shadow-md rounded-2xl flex items-center justify-center text-center font-semibold text-gray-700 hover:shadow-xl hover:scale-105 transition duration-200 cursor-pointer">
+        <div className="bg-white/95 backdrop-blur w-full h-full min-h-[72px] shadow-sm hover:shadow-md rounded-xl flex items-center justify-center text-center font-semibold text-gray-700 text-sm md:text-base hover:scale-[1.02] transition duration-200 cursor-pointer p-2">
             <h1>Feed Stock</h1>
         </div>
     );

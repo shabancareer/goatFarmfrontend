@@ -48,7 +48,6 @@ export const selectHasPermission =
  */
 const ROLE_LEVEL: Record<Role, number> = {
     [Role.SUPER_OWNER]: 100,
-    [Role.OWNER]: 80,
     [Role.MANAGER]: 60,
     [Role.WORKER]: 40,
     [Role.VIEWER]: 20,

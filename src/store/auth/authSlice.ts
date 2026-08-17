@@ -53,11 +53,11 @@ const authSlice = createSlice({
                 state.error = payload as string;
             });
 
-        builder.addCase(logout.fulfilled, () => ({ ...authInitialState }));
+        builder.addCase(logout.fulfilled, () => ({ ...authInitialState, status: 'idle' }));
 
         builder
             .addCase(fetchMe.fulfilled, (state, { payload }) => { state.user = payload; })
-            .addCase(fetchMe.rejected, (state) => { Object.assign(state, authInitialState); });
+            .addCase(fetchMe.rejected, (state) => { Object.assign(state, { ...authInitialState, status: 'idle' }); });
 
         builder
             .addCase(fetchOrgUsers.pending, (state) => { state.status = 'loading'; })

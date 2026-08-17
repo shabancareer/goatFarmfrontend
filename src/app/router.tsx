@@ -26,8 +26,8 @@ export const AppRouter: React.FC = () => {
           <Route path="/dashboard/AnimalPanel" element={<AnimalPanel />} />
         </Route>
 
-        {/* Role-Restricted Routes (Owner, Super Owner, Manager) */}
-        <Route element={<ProtectedRoute allowedRoles={[Role.SUPER_OWNER, Role.OWNER, Role.MANAGER]} />}>
+        {/* Role-Restricted Routes (Super Owner, Manager) */}
+        <Route element={<ProtectedRoute allowedRoles={[Role.SUPER_OWNER, Role.MANAGER]} />}>
           <Route path="/dashboard/ManageGoats" element={<ManageGoats />} />
         </Route>
         

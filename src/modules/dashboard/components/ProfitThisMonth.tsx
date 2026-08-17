@@ -36,8 +36,8 @@ export default function ProfitThisMonth() {
     }, []);
 
     return (
-        <div className="bg-white w-[200px] h-[100px] shadow-md rounded-2xl flex items-center justify-center text-center font-semibold text-gray-700 hover:shadow-xl hover:scale-105 transition duration-200 cursor-pointer p-2">
-            <div className="w-full h-full">
+        <div className="w-full h-full flex items-center justify-center p-2 relative overflow-hidden">
+            <div className="w-full h-full relative">
                 <canvas ref={canvasRef}></canvas>
             </div>
         </div>

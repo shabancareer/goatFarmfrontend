@@ -7,13 +7,12 @@
 // ==========================================
 export const Role = {
     SUPER_OWNER: 'super_owner',
-    OWNER: 'owner',
     MANAGER: 'manager',
     WORKER: 'worker',
     VIEWER: 'viewer',
 } as const;
 
-// This generates a union type: 'super_owner' | 'owner' | 'manager' | 'worker' | 'viewer'
+// This generates a union type: 'super_owner' | 'manager' | 'worker' | 'viewer'
 export type Role = typeof Role[keyof typeof Role];
 
 
@@ -48,6 +47,14 @@ export type Permission = typeof Permission[keyof typeof Permission];
 // ─────────────────────────────────────────────────────────────────────────────
 // Shared API types
 // ─────────────────────────────────────────────────────────────────────────────
+export interface Organisation {
+    id: string;
+    name: string;
+    superOwnerId: string;
+    isActive: boolean;
+    createdAt?: string;
+}
+
 export interface User {
     id: string;
     name: string;
@@ -56,6 +63,7 @@ export interface User {
     isSuperOwner: boolean;
     isActive: boolean;
     orgId: string;
+    accessibleOrganizations?: Organisation[];
     phone: string | null;
     photoUrl: string | null;
     isAvailable: boolean;

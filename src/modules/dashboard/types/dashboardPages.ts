@@ -15,3 +15,4 @@ export type DashboardPages =
     | "Manage Animal"
     | "HerdManagement"
     | "Employe Managment"
+    | "Organisation Management"

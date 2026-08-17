@@ -23,9 +23,9 @@ export default function TotalGoats({ onNavigate }: Props) {
         ) : (
             <div
                 onClick={() => onNavigate?.("Manage Animal")}
-                className="bg-white w-[200px] h-[100px] shadow-md rounded-2xl flex items-center justify-center text-center font-semibold text-gray-700 hover:shadow-xl hover:scale-105 transition duration-200 cursor-pointer"
+                className="bg-white/95 backdrop-blur w-full h-full min-h-[72px] shadow-sm hover:shadow-md rounded-xl flex items-center justify-center text-center font-semibold text-gray-700 hover:scale-[1.02] transition duration-200 cursor-pointer p-2"
             >
-                <div className="text-2xl">Total Goats <br /> <CrueltyFreeIcon className="text-green-400" />{totalGoats}</div>
+                <div className="text-sm md:text-base leading-tight">Total Goats <br /> <CrueltyFreeIcon className="text-green-500 text-lg" /> {totalGoats}</div>
             </div>
         )
 

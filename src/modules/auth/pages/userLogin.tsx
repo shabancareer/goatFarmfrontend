@@ -60,8 +60,14 @@ export const UserLogin: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
     const [searchParams] = useSearchParams();
 
-    const { status, error } = useSelector((state: RootState) => state.auth);
+    const { user, accessToken, status, error } = useSelector((state: RootState) => state.auth);
     const isLoading = status === 'loading';
+
+    useEffect(() => {
+        if (accessToken && user) {
+            navigate('/dashboard', { replace: true });
+        }
+    }, [accessToken, user, navigate]);
 
     const [formData, setFormData] = useState({
         email: '',

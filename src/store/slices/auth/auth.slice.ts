@@ -65,7 +65,7 @@ const authSlice = createSlice({
             });
 
         // ── Logout ────────────────────────────────────────────────────────────────
-        builder.addCase(logout.fulfilled, () => ({ ...authInitialState }));
+        builder.addCase(logout.fulfilled, () => ({ ...authInitialState, status: 'idle' }));
 
         // ── Refresh Session (App Load) ──────────────────────────────────────────
         builder
@@ -87,7 +87,7 @@ const authSlice = createSlice({
         // ── Fetch Me ─────────────────────────────────────────────────────────────
         builder
             .addCase(fetchMe.fulfilled, (state, { payload }) => { state.user = payload; })
-            .addCase(fetchMe.rejected, (state) => { Object.assign(state, authInitialState); });
+            .addCase(fetchMe.rejected, (state) => { Object.assign(state, { ...authInitialState, status: 'idle' }); });
 
         // ── Org users ─────────────────────────────────────────────────────────────
         builder
