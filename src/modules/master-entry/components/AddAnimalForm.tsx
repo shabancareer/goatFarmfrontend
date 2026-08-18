@@ -15,8 +15,8 @@ import { useForm } from 'react-hook-form';
 import toast from "react-hot-toast";
 import { useWatch } from "react-hook-form";
 import { useCreateGoat, useGetAllGoats, useDeleteGoat, useUpdateGoat } from '../../herd-management/hooks/useCreateGoat';
-// import { AnimalInterface } from '@/components/DashboardComponents/MasterEntryComponents/Interfaces/AnimalInterface';
-
+import { useSelector } from "react-redux";
+import type { RootState } from "@/store/store";
 
 interface FormData {
     animalName: string;
@@ -31,7 +31,8 @@ interface FormData {
     breedType: string;
     motherId: string;
     fatherId: string;
-    partition: string;
+    orgId: string;
+    orgName: string;
     site: string;
     purchasePrice: number;
     estimatedAgeYears: number;
@@ -54,7 +55,6 @@ const formatField = (value: number | string | null, isDate = false) => {
     if (isDate) {
         const date = new Date(value);
         if (isNaN(date.getTime())) return value;
-
         return date
             .toLocaleDateString("en-GB", {
                 day: "numeric",
@@ -110,7 +110,8 @@ const AddAnimalForm = () => {
             breedType: '',
             motherId: '',
             fatherId: '',
-            partition: '',
+            orgId: '',
+            orgName: '',
             site: '',
             purchasePrice: 0,
             estimatedAgeYears: 0,
@@ -134,7 +135,7 @@ const AddAnimalForm = () => {
             "Age Calculator",
             "Mother ID",
             "Father ID",
-            "Partition",
+            "Organisation",
             "Site",
             "Purchase Type",
             "DOB",
@@ -156,7 +157,7 @@ const AddAnimalForm = () => {
                 goat.age,
                 formatField(goat.motherId),
                 formatField(goat.fatherId),
-                goat.partition,
+                goat.orgName || 'Main Goat Farm',
                 goat.site,
                 goat.purchaseType,
                 formatField(goat.dateOfBirth, true),
@@ -295,7 +296,23 @@ const AddAnimalForm = () => {
             goats?.data || [],
             currentTagId
         );
-    }, [goats?.data, purchaseType, currentTagId]);
+    }, [goats?.data, purchaseType, currentTagId]);    const { user } = useSelector((state: RootState) => state.auth);
+    const { currentOrganization } = useSelector((state: RootState) => state.organization);
+
+    const userOrgs = useMemo(() => {
+        if (user?.accessibleOrganizations && user.accessibleOrganizations.length > 0) {
+            return user.accessibleOrganizations.map((org: any) => ({
+                id: org.id || org._id,
+                name: org.name || org.organisationName || 'Main Goat Farm'
+            }));
+        }
+        return [
+            {
+                id: currentOrganization?.id || user?.orgId || 'org_1',
+                name: currentOrganization?.name || user?.orgName || 'Main Goat Farm'
+            }
+        ];
+    }, [user, currentOrganization]);
 
     const emptyFormValues = {
         animalName: '',
@@ -310,7 +327,8 @@ const AddAnimalForm = () => {
         breedType: '',
         motherId: '',
         fatherId: '',
-        partition: '',
+        orgId: currentOrganization?.id || userOrgs[0]?.id || '',
+        orgName: currentOrganization?.name || userOrgs[0]?.name || '',
         site: '',
         purchasePrice: 0,
         estimatedAgeYears: 0,
@@ -344,6 +362,8 @@ const AddAnimalForm = () => {
                     ? "BUK"
                     : data.type.charAt(0).toUpperCase() + data.type.slice(1);
 
+            const selectedOrg = userOrgs.find((o: any) => o.id === data.orgId) || userOrgs[0];
+
             const goatData: any = {
                 animalName: data.animalName,
                 gender: data.gender,
@@ -355,7 +375,8 @@ const AddAnimalForm = () => {
                 tagId: Number(data.tagId),
                 weight: Number(data.weight),
                 breedType: data.breedType,
-                partition: data.partition,
+                orgId: data.orgId || selectedOrg?.id,
+                orgName: selectedOrg?.name || data.orgName || 'Main Goat Farm',
                 site: data.site,
             };
 
@@ -383,87 +404,33 @@ const AddAnimalForm = () => {
             // PURCHASE TYPE: PURCHASE
             // ==========================
             if (data.purchaseType === "purchase") {
-                const years = data.estimatedAgeYears ?? 0;
-                const months = data.estimatedAgeMonths ?? 0;
-                const days = data.estimatedAgeDays ?? 0;
-                // console.log("data:::", data);
-                if (months > 11) {
-                    toast.error("Months must be between 0 and 11");
-                    return;
-                }
-                if (days > 30) {
-                    toast.error("Days must be between 0 and 30");
-                    return;
-                }
+                goatData.purchasePrice = Number(data.purchasePrice);
+                goatData.purchaseFrom = data.purchaseFrom;
+                goatData.purchaseDate = data.dateOfPurchase;
 
-                // Calculate estimated Date of Birth
-                const estimatedDOB = new Date(data.dateOfPurchase);
-                estimatedDOB.setFullYear(estimatedDOB.getFullYear() - years);
-                estimatedDOB.setMonth(estimatedDOB.getMonth() - months);
-                estimatedDOB.setDate(estimatedDOB.getDate() - days);
+                goatData.estimatedAgeYears = Number(data.estimatedAgeYears || 0);
+                goatData.estimatedAgeMonths = Number(data.estimatedAgeMonths || 0);
+                goatData.estimatedAgeDays = Number(data.estimatedAgeDays || 0);
 
-                // Add Estimated fields for database
-                goatData.estimatedAgeYears = years;
-                goatData.estimatedAgeMonths = months;
-                goatData.estimatedAgeDays = days;
-
-                goatData.purchasePrice = data.purchasePrice
-                    ? Number(data.purchasePrice)
-                    : null;
-
-                goatData.purchaseFrom =
-                    data.purchaseFrom?.trim() || null;
-
-                goatData.purchaseDate =
-                    data.dateOfPurchase || null;
-
-                // Clear lineage fields
-                //  TO THIS:
-                goatData.motherId = null;
-                goatData.fatherId = null;
                 goatData.dateOfBirth = null;
-
-
             }
 
-            // ==========================
-            // GENDER LOGIC
-            // ==========================
-            if (data.gender === "Female") {
-                goatData.kiddingCapacity = data.kiddingCapacity
-                    ? Number(data.kiddingCapacity)
-                    : null;
-            } else {
-                goatData.kiddingCapacity = null;
-            }
-            // console.log("Final Payload:", goatData);
-            // ==========================
-            // UPDATE
-            // ==========================
+            console.log("Submitting Goat Payload:", goatData);
+
             if (editGoat) {
-                console.log("updateGoat.mutateAsync=:", goatData);
                 await updateGoat.mutateAsync({
-                    id: editGoat.tagId,
                     ...goatData,
+                    id: editGoat._id
                 });
                 toast.success("Goat updated successfully");
-            }
-
-            // ==========================
-            // CREATE
-            // ==========================
-            else {
-                // console.log("Final Payload:", goatData);
+            } else {
                 await createGoat.mutateAsync(goatData);
-                toast.success("Goat added successfully");
+                toast.success("Goat created successfully");
             }
 
-            // ==========================
-            // RESET FORM
-            // ==========================
-            reset(emptyFormValues);
-            setEditGoat(null);
             setShowModal(false);
+            setEditGoat(null);
+            reset(emptyFormValues);
 
         } catch (error: any) {
             console.error(error);
@@ -489,7 +456,8 @@ const AddAnimalForm = () => {
             breedType: goat.breedType || "",
             motherId: goat.motherId ? String(goat.motherId) : "",
             fatherId: goat.fatherId ? String(goat.fatherId) : "",
-            partition: goat.partition || "",
+            orgId: goat.orgId || currentOrganization?.id || "",
+            orgName: goat.orgName || currentOrganization?.name || "",
             site: goat.site || "",
             purchasePrice: goat.purchasePrice ?? "",
             purchaseFrom: goat.purchaseFrom || "",
@@ -544,8 +512,9 @@ const AddAnimalForm = () => {
             header: "Site",
         },
         {
-            accessorKey: "partition",
-            header: "Partition",
+            accessorKey: "orgName",
+            header: "Organisation",
+            cell: (info) => info.getValue() || 'Main Goat Farm',
         },
         {
             accessorKey: "breedType",
@@ -636,414 +605,450 @@ const AddAnimalForm = () => {
             <button
                 onClick={() => setShowModal(true)}
                 className="bg-blue-500 hover:bg-blue-600 cursor-pointer text-white font-bold py-2 px-4 mx-3 rounded">Add Animal</button>
-            {showModal && (<form onSubmit={handleSubmit(onSubmit)} className="p-4 md:p-10 absolute w-full rounded-lg shadow z-10">
-
-                {createGoat.isError && (
-                    <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-                        Error: {createGoat.error?.response?.data?.message || 'Failed to add goat'}
-                    </div>
-                )}
-                <div className="relative grid grid-cols-1 md:grid-cols-2 gap-4 border-2 w-full max-w-4xl rounded-lg mx-auto bg-white shadow-lg p-6 md:p-8">
-                    <button
-                        onClick={() => {
-                            setShowModal(false);
-                            setEditGoat(null);
-                            reset(emptyFormValues);
-                        }}
-                        className="w-10 h-10 flex items-center justify-center absolute top-2 right-2 bg-gradient-to-b from-blue-500 to-red-500 hover:from-red-500 hover:to-blue-500 cursor-pointer text-white rounded-md z-20"
+            {showModal && (
+                <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+                    <form
+                        onSubmit={handleSubmit(onSubmit)}
+                        className="relative bg-white rounded-xl shadow-2xl w-[96vw] max-w-6xl h-auto max-h-[90vh] flex flex-col border border-gray-200 overflow-hidden my-auto"
                     >
-                        <X />
-                    </button>
-                    {/* Animal Name */}
-                    <div className="flex flex-col justify-center p-3">
-                        <label htmlFor="animalName" className="font-medium">Animal Name *</label>
-                        <input
-                            id="animalName"
-                            type="text"
-                            {...register('animalName', { required: 'Animal name is required' })}
-                            className={`border ${errors.animalName ? 'border-red-500' : 'border-gray-300'} rounded-md p-2`}
-                            placeholder="Barhy Seeng Wali etc."
-                        />
-                        {errors.animalName && (
-                            <span className="text-red-500 text-xs mt-1">{errors.animalName.message}</span>
-                        )}
-                    </div>
-
-                    {/* Gender */}
-                    <div className="flex flex-col justify-center p-1">
-                        <label htmlFor="gender" className="font-medium">Gender *</label>
-                        <select
-                            id="gender"
-                            {...register('gender', { required: 'Gender is required' })}
-                            className={`border ${errors.gender ? 'border-red-500' : 'border-gray-300'} p-2 rounded`}
-                        >
-                            <option value="">Select Gender</option>
-                            <option value="Male">Male</option>
-                            <option value="Female">Female</option>
-                            {/* <option value="Kid">Kid</option> */}
-                        </select>
-                        {errors.gender && (
-                            <span className="text-red-500 text-xs mt-1">{errors.gender.message}</span>
-                        )}
-                    </div>
-
-                    {/* Purchase Type */}
-                    <div className="flex flex-col justify-center p-1">
-                        <label htmlFor="purchaseType" className="font-medium">Purchase Type *</label>
-                        <select
-                            id="purchaseType"
-                            {...register('purchaseType', { required: 'Purchase type is required' })}
-                            className={`border ${errors.purchaseType ? 'border-red-500' : 'border-gray-300'} rounded-md p-2`}
-                        >
-                            <option value="">Select Purchase Type</option>
-                            <option value="purchase">Purchase</option>
-                            <option value="own">Own</option>
-                        </select>
-                        {errors.purchaseType && (
-                            <span className="text-red-500 text-xs mt-1">{errors.purchaseType.message}</span>
-                        )}
-                    </div>
-
-                    {/* Date of Birth */}
-                    <div className="flex flex-col justify-center p-1">
-                        <label htmlFor="dateOfBirth" className="font-medium">Date of Birth {purchaseType === 'own' ? '*' : ''}</label>
-                        <input
-                            id="dateOfBirth"
-                            type="date"
-                            {...register('dateOfBirth', {
-                                required: purchaseType === 'own' ? 'Date of birth is required' : false
-                            })}
-                            disabled={purchaseType === "purchase"}
-                            className={`border ${errors.dateOfBirth ? 'border-red-500' : 'border-gray-300'} rounded-md p-2 disabled:bg-gray-200`}
-                        />
-                        {errors.dateOfBirth && (
-                            <span className="text-red-500 text-xs mt-1">{errors.dateOfBirth.message}</span>
-                        )}
-                    </div>
-
-                    {/* Date of Purchase */}
-                    <div className="flex flex-col justify-center p-1">
-                        <label htmlFor="dateOfPurchase" className="font-medium">Date of Purchase {purchaseType === 'purchase' ? '*' : ''}</label>
-                        <input
-                            id="dateOfPurchase"
-                            type="date"
-                            {...register('dateOfPurchase', {
-                                required: purchaseType === 'purchase' ? 'Purchase date is required' : false
-                            })}
-                            disabled={purchaseType === "own"}
-                            className={`border ${errors.dateOfPurchase ? 'border-red-500' : 'border-gray-300'} rounded-md p-2 disabled:bg-gray-200`}
-                        />
-                        {errors.dateOfPurchase && (
-                            <span className="text-red-500 text-xs mt-1">{errors.dateOfPurchase.message}</span>
-                        )}
-                    </div>
-                    {/* Estimated age*/}
-                    <div className="grid grid-cols-3 gap-4">
-
-                        <div>
-                            <label className="block text-sm font-medium mb-2 text-xs font-semibold">
-                                Est. Age (Years)
-                            </label>
-                            <input
-                                type="number"
-                                min="0"
-                                placeholder="0"
-                                {...register("estimatedAgeYears", {
-                                    valueAsNumber: true,
-                                })}
-                                disabled={purchaseType === "own"}
-                                className={`border ${errors.estimatedAgeYears ? 'border-red-500' : 'border-gray-300'} rounded-md p-2 disabled:bg-gray-200 w-full`}
-                            />
+                        {/* Modal Header */}
+                        <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200 bg-gray-50/90 sticky top-0 z-20 flex-shrink-0">
+                            <h3 className="text-xl font-bold text-gray-800">
+                                {editGoat ? 'Edit Animal' : 'Add New Animal'}
+                            </h3>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setShowModal(false);
+                                    setEditGoat(null);
+                                    reset(emptyFormValues);
+                                }}
+                                className="w-8 h-8 flex items-center justify-center rounded-lg bg-gray-100 text-gray-500 hover:bg-red-50 hover:text-red-600 transition-colors cursor-pointer"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
                         </div>
-                        <div>
-                            <label className="block text-sm font-medium mb-2 text-xs font-semibold">
-                                Est. Age (Months)
-                            </label>
-                            <input
-                                type="number"
-                                min="0"
-                                max="11"
-                                placeholder="0"
-                                {...register("estimatedAgeMonths", {
-                                    valueAsNumber: true,
-                                })}
-                                disabled={purchaseType === "own"}
-                                className={`border ${errors.estimatedAgeMonths ? 'border-red-500' : 'border-gray-300'} disabled:bg-gray-200 w-full rounded-lg p-2`}
-                            />
+
+                        {/* Scrollable Form Content */}
+                        <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4">
+                            {createGoat.isError && (
+                                <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">
+                                    Error: {createGoat.error?.response?.data?.message || 'Failed to add goat'}
+                                </div>
+                            )}
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-5">
+                                {/* ROW 1 */}
+                                {/* Animal Name */}
+                                <div className="flex flex-col justify-center">
+                                    <label htmlFor="animalName" className="text-xs font-semibold text-gray-700 mb-1">Animal Name *</label>
+                                    <input
+                                        id="animalName"
+                                        type="text"
+                                        {...register('animalName', { required: 'Animal name is required' })}
+                                        className={`border ${errors.animalName ? 'border-red-500' : 'border-gray-300'} rounded-lg p-2.5 text-sm shadow-xs focus:ring-2 focus:ring-blue-500 focus:outline-none`}
+                                        placeholder="Barhy Seeng Wali etc."
+                                    />
+                                    {errors.animalName && (
+                                        <span className="text-red-500 text-xs mt-1">{errors.animalName.message}</span>
+                                    )}
+                                </div>
+
+                                {/* Gender */}
+                                <div className="flex flex-col justify-center">
+                                    <label htmlFor="gender" className="text-xs font-semibold text-gray-700 mb-1">Gender *</label>
+                                    <select
+                                        id="gender"
+                                        {...register('gender', { required: 'Gender is required' })}
+                                        className={`border ${errors.gender ? 'border-red-500' : 'border-gray-300'} p-2.5 rounded-lg text-sm shadow-xs focus:ring-2 focus:ring-blue-500 focus:outline-none`}
+                                    >
+                                        <option value="">Select Gender</option>
+                                        <option value="Male">Male</option>
+                                        <option value="Female">Female</option>
+                                    </select>
+                                    {errors.gender && (
+                                        <span className="text-red-500 text-xs mt-1">{errors.gender.message}</span>
+                                    )}
+                                </div>
+
+                                {/* Purchase Type */}
+                                <div className="flex flex-col justify-center">
+                                    <label htmlFor="purchaseType" className="text-xs font-semibold text-gray-700 mb-1">Purchase Type *</label>
+                                    <select
+                                        id="purchaseType"
+                                        {...register('purchaseType', { required: 'Purchase type is required' })}
+                                        className={`border ${errors.purchaseType ? 'border-red-500' : 'border-gray-300'} rounded-lg p-2.5 text-sm shadow-xs focus:ring-2 focus:ring-blue-500 focus:outline-none`}
+                                    >
+                                        <option value="">Select Purchase Type</option>
+                                        <option value="purchase">Purchase</option>
+                                        <option value="own">Own</option>
+                                    </select>
+                                    {errors.purchaseType && (
+                                        <span className="text-red-500 text-xs mt-1">{errors.purchaseType.message}</span>
+                                    )}
+                                </div>
+
+                                {/* ROW 2 */}
+                                {/* Date of Birth */}
+                                <div className="flex flex-col justify-center">
+                                    <label htmlFor="dateOfBirth" className="text-xs font-semibold text-gray-700 mb-1">Date of Birth {purchaseType === 'own' ? '*' : ''}</label>
+                                    <input
+                                        id="dateOfBirth"
+                                        type="date"
+                                        {...register('dateOfBirth', {
+                                            required: purchaseType === 'own' ? 'Date of birth is required' : false
+                                        })}
+                                        disabled={purchaseType === "purchase"}
+                                        className={`border ${errors.dateOfBirth ? 'border-red-500' : 'border-gray-300'} rounded-lg p-2.5 text-sm shadow-xs disabled:bg-gray-100 disabled:text-gray-400`}
+                                    />
+                                    {errors.dateOfBirth && (
+                                        <span className="text-red-500 text-xs mt-1">{errors.dateOfBirth.message}</span>
+                                    )}
+                                </div>
+
+                                {/* Date of Purchase */}
+                                <div className="flex flex-col justify-center">
+                                    <label htmlFor="dateOfPurchase" className="text-xs font-semibold text-gray-700 mb-1">Date of Purchase {purchaseType === 'purchase' ? '*' : ''}</label>
+                                    <input
+                                        id="dateOfPurchase"
+                                        type="date"
+                                        {...register('dateOfPurchase', {
+                                            required: purchaseType === 'purchase' ? 'Purchase date is required' : false
+                                        })}
+                                        disabled={purchaseType === "own"}
+                                        className={`border ${errors.dateOfPurchase ? 'border-red-500' : 'border-gray-300'} rounded-lg p-2.5 text-sm shadow-xs disabled:bg-gray-100 disabled:text-gray-400`}
+                                    />
+                                    {errors.dateOfPurchase && (
+                                        <span className="text-red-500 text-xs mt-1">{errors.dateOfPurchase.message}</span>
+                                    )}
+                                </div>
+
+                                {/* Estimated age */}
+                                <div className="grid grid-cols-3 gap-2">
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-700 mb-1">
+                                            Est. Yrs
+                                        </label>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            placeholder="0"
+                                            {...register("estimatedAgeYears", {
+                                                valueAsNumber: true,
+                                            })}
+                                            disabled={purchaseType === "own"}
+                                            className={`border ${errors.estimatedAgeYears ? 'border-red-500' : 'border-gray-300'} rounded-lg p-2.5 text-sm disabled:bg-gray-100 disabled:text-gray-400 w-full`}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-700 mb-1">
+                                            Est. Mths
+                                        </label>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            max="11"
+                                            placeholder="0"
+                                            {...register("estimatedAgeMonths", {
+                                                valueAsNumber: true,
+                                            })}
+                                            disabled={purchaseType === "own"}
+                                            className={`border ${errors.estimatedAgeMonths ? 'border-red-500' : 'border-gray-300'} disabled:bg-gray-100 disabled:text-gray-400 w-full rounded-lg p-2.5 text-sm`}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-700 mb-1">
+                                            Est. Days
+                                        </label>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            max="30"
+                                            placeholder="0"
+                                            {...register("estimatedAgeDays", {
+                                                valueAsNumber: true,
+                                            })}
+                                            disabled={purchaseType === "own"}
+                                            className={`border ${errors.estimatedAgeDays ? 'border-red-500' : 'border-gray-300'} disabled:bg-gray-100 disabled:text-gray-400 w-full rounded-lg p-2.5 text-sm`}
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* ROW 3 */}
+                                {/* Type */}
+                                <div className="flex flex-col justify-center">
+                                    <label htmlFor="type" className="text-xs font-semibold text-gray-700 mb-1">Type *</label>
+                                    <select
+                                        id="type"
+                                        {...register('type', { required: 'Type is required' })}
+                                        className={`border ${errors.type ? 'border-red-500' : 'border-gray-300'} rounded-lg p-2.5 text-sm shadow-xs focus:ring-2 focus:ring-blue-500 focus:outline-none`}
+                                    >
+                                        <option value="">Select type</option>
+                                        <option value="buk">Buk</option>
+                                        <option value="wether">Wether</option>
+                                        <option value="doe">Doe</option>
+                                    </select>
+                                    {errors.type && (
+                                        <span className="text-red-500 text-xs mt-1">{errors.type.message}</span>
+                                    )}
+                                </div>
+
+                                {/* Kidding Capacity */}
+                                <div className="flex flex-col justify-center">
+                                    <label htmlFor="kiddingCapacity" className="text-xs font-semibold text-gray-700 mb-1">Kidding Capacity {gender === 'Female' ? '*' : ''}</label>
+                                    <select
+                                        id="kiddingCapacity"
+                                        {...register('kiddingCapacity', {
+                                            required: gender === 'Female' ? 'Kidding capacity is required for females' : false
+                                        })}
+                                        disabled={gender !== "Female"}
+                                        className={`border ${errors.kiddingCapacity ? 'border-red-500' : 'border-gray-300'} rounded-lg p-2.5 text-sm shadow-xs disabled:bg-gray-100 disabled:text-gray-400`}
+                                    >
+                                        <option value="">Select Kidding Capacity</option>
+                                        <option value="1">1</option>
+                                        <option value="2">2</option>
+                                        <option value="3">3</option>
+                                        <option value="4">4</option>
+                                        <option value="5">5</option>
+                                    </select>
+                                    {errors.kiddingCapacity && (
+                                        <span className="text-red-500 text-xs mt-1">{errors.kiddingCapacity.message}</span>
+                                    )}
+                                </div>
+
+                                {/* Tag ID */}
+                                <div className="flex flex-col justify-center">
+                                    <label htmlFor="tagId" className="text-xs font-semibold text-gray-700 mb-1">Tag ID *</label>
+                                    <input
+                                        id="tagId"
+                                        type="number"
+                                        {...register('tagId', {
+                                            required: 'Tag ID is required',
+                                            pattern: {
+                                                value: /^[0-9]+$/,
+                                                message: 'Tag ID must be a number'
+                                            }
+                                        })}
+                                        className={`border ${errors.tagId ? 'border-red-500' : 'border-gray-300'} rounded-lg p-2.5 text-sm shadow-xs focus:ring-2 focus:ring-blue-500 focus:outline-none`}
+                                        placeholder="Tag ID"
+                                    />
+                                    {errors.tagId && (
+                                        <span className="text-red-500 text-xs mt-1">{errors.tagId.message}</span>
+                                    )}
+                                </div>
+
+                                {/* ROW 4 */}
+                                {/* Weight */}
+                                <div className="flex flex-col justify-center">
+                                    <label htmlFor="weight" className="text-xs font-semibold text-gray-700 mb-1">Weight KG *</label>
+                                    <input
+                                        id="weight"
+                                        type="number"
+                                        step="0.1"
+                                        {...register('weight', {
+                                            required: 'Weight is required',
+                                            min: { value: 0.1, message: 'Weight must be greater than 0' }
+                                        })}
+                                        className={`border ${errors.weight ? 'border-red-500' : 'border-gray-300'} rounded-lg p-2.5 text-sm shadow-xs focus:ring-2 focus:ring-blue-500 focus:outline-none`}
+                                        placeholder="Weight KG"
+                                    />
+                                    {errors.weight && (
+                                        <span className="text-red-500 text-xs mt-1">{errors.weight.message}</span>
+                                    )}
+                                </div>
+
+                                {/* Breed Type */}
+                                <div className="flex flex-col justify-center">
+                                    <label htmlFor="breedType" className="text-xs font-semibold text-gray-700 mb-1">Breed Type *</label>
+                                    <select
+                                        id="breedType"
+                                        {...register('breedType', { required: 'Breed type is required' })}
+                                        className={`border ${errors.breedType ? 'border-red-500' : 'border-gray-300'} rounded-lg p-2.5 text-sm shadow-xs focus:ring-2 focus:ring-blue-500 focus:outline-none`}
+                                    >
+                                        <option value="">Select Breed Type</option>
+                                        <option value="Beetal">Beetal</option>
+                                        <option value="Teddy">Teddy</option>
+                                        <option value="Nachi">Nachi</option>
+                                        <option value="Dera Din Panah (DDP)">Dera Din Panah (DDP)</option>
+                                        <option value="Barbari">Barbari</option>
+                                        <option value="Pothwari/Potohari">Pothwari/Potohari</option>
+                                        <option value="Hairy/Kajli">Hairy/Kajli</option>
+                                    </select>
+                                    {errors.breedType && (
+                                        <span className="text-red-500 text-xs mt-1">{errors.breedType.message}</span>
+                                    )}
+                                </div>
+
+                                {/* Mother ID */}
+                                <div className="flex flex-col justify-center">
+                                    <label htmlFor="motherId" className="text-xs font-semibold text-gray-700 mb-1">Mother ID {purchaseType === 'own' ? '*' : ''}</label>
+                                    <select
+                                        className={`
+                                            border rounded-lg p-2.5 text-sm shadow-xs
+                                            ${errors.motherId ? 'border-red-500' : 'border-gray-300'}
+                                            ${purchaseType !== 'own' ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : ''}
+                                        `}
+                                        disabled={purchaseType !== "own"}
+                                        {...register("motherId", {
+                                            required:
+                                                purchaseType === "own"
+                                                    ? "Mother ID is required"
+                                                    : false,
+                                            validate: (value) => {
+                                                if (purchaseType !== "own") return true;
+                                                return validateParentForm(
+                                                    value,
+                                                    "mother",
+                                                    goats?.data || [],
+                                                    watch("tagId")
+                                                );
+                                            }
+                                        })}
+                                    >
+                                        <option value="">{purchaseType === 'own' ? 'Select Mother' : '-'}</option>
+                                        {motherSuggestions.map((g: any) => (
+                                            <option key={g.tagId} value={g.tagId}>
+                                                {g.tagId}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                {/* ROW 5 */}
+                                {/* Father ID */}
+                                <div className="flex flex-col justify-center">
+                                    <label htmlFor="fatherId" className="text-xs font-semibold text-gray-700 mb-1">Father ID {purchaseType === 'own' ? '*' : ''}</label>
+                                    <select
+                                        className={`
+                                            border rounded-lg p-2.5 text-sm shadow-xs
+                                            ${errors.fatherId ? 'border-red-500' : 'border-gray-300'}
+                                            ${purchaseType !== 'own' ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : ''}
+                                        `}
+                                        disabled={purchaseType !== "own"}
+                                        {...register("fatherId", {
+                                            required:
+                                                purchaseType === "own"
+                                                    ? "Father ID is required"
+                                                    : false,
+                                            validate: (value) => {
+                                                if (purchaseType !== "own") return true;
+
+                                                return validateParentForm(
+                                                    value,
+                                                    "father",
+                                                    goats?.data || [],
+                                                    watch("tagId")
+                                                );
+                                            }
+                                        })}
+                                    >
+                                        <option value="">{purchaseType === 'own' ? 'Select Father' : '-'}</option>
+                                        {fatherSuggestions.map((g: any) => (
+                                            <option key={g.tagId} value={g.tagId}>
+                                                {g.tagId}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                {/* Organisation */}
+                                <div className="flex flex-col justify-center">
+                                    <label htmlFor="orgId" className="text-xs font-semibold text-gray-700 mb-1">Organisation *</label>
+                                    <select
+                                        id="orgId"
+                                        {...register('orgId', { required: 'Organisation is required' })}
+                                        className="border border-gray-300 rounded-lg p-2.5 text-sm shadow-xs focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white cursor-pointer"
+                                    >
+                                        {userOrgs.map((org: any) => (
+                                            <option key={org.id} value={org.id}>
+                                                {org.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                {/* Site */}
+                                <div className="flex flex-col justify-center">
+                                    <label htmlFor="site" className="text-xs font-semibold text-gray-700 mb-1">Site</label>
+                                    <input
+                                        id="site"
+                                        type="text"
+                                        {...register('site')}
+                                        className="border border-gray-300 rounded-lg p-2.5 text-sm shadow-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                                        placeholder="Site"
+                                    />
+                                </div>
+
+                                {/* ROW 6 */}
+                                {/* Purchase Price */}
+                                <div className="flex flex-col justify-center">
+                                    <label className="text-xs font-semibold text-gray-700 mb-1">Purchase Price {purchaseType === 'purchase' ? '*' : ''}</label>
+                                    <input
+                                        type="number"
+                                        {...register('purchasePrice', {
+                                            required: purchaseType === 'purchase' ? 'Purchase price is required' : false,
+                                        })}
+                                        disabled={purchaseType === "own"}
+                                        className={`border ${errors.purchasePrice ? 'border-red-500' : 'border-gray-300'} rounded-lg p-2.5 text-sm shadow-xs disabled:bg-gray-100 disabled:text-gray-400`}
+                                        placeholder="Purchase Price"
+                                    />
+                                    {errors.purchasePrice && (
+                                        <span className="text-red-500 text-xs mt-1">
+                                            {errors.purchasePrice.message}
+                                        </span>
+                                    )}
+                                </div>
+
+                                {/* Purchase From (Spans 2 columns to fill row 6 completely!) */}
+                                <div className="flex flex-col justify-center col-span-1 md:col-span-2">
+                                    <label htmlFor="purchaseFrom" className="text-xs font-semibold text-gray-700 mb-1">Purchase From {purchaseType === 'purchase' ? '*' : ''}</label>
+                                    <input
+                                        disabled={purchaseType === "own"}
+                                        id="purchaseFrom"
+                                        type="text"
+                                        {...register('purchaseFrom', {
+                                            required: purchaseType === 'purchase' ? 'Seller name is required' : false
+                                        })}
+                                        className={`border ${errors.purchaseFrom ? 'border-red-500' : 'border-gray-300'} rounded-lg p-2.5 text-sm shadow-xs disabled:bg-gray-100 disabled:text-gray-400`}
+                                        placeholder="Purchase From"
+                                    />
+                                    {errors.purchaseFrom && (
+                                        <span className="text-red-500 text-xs mt-1">{errors.purchaseFrom.message}</span>
+                                    )}
+                                </div>
+                            </div>
                         </div>
-                        <div>
-                            <label className="block text-sm font-medium mb-2 text-xs font-semibold">
-                                Est. Age (Days)
-                            </label>
-                            <input
-                                type="number"
-                                min="0"
-                                max="30"
-                                placeholder="0"
-                                {...register("estimatedAgeDays", {
-                                    valueAsNumber: true,
-                                })}
-                                disabled={purchaseType === "own"}
-                                className={`border ${errors.estimatedAgeDays ? 'border-red-500' : 'border-gray-300'} disabled:bg-gray-200 w-full rounded-lg p-2`}
-                            />
+
+                        {/* Modal Footer */}
+                        <div className="px-6 py-3 border-t border-gray-200 bg-gray-50 flex items-center justify-end gap-3 sticky bottom-0 z-20 flex-shrink-0">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setShowModal(false);
+                                    setEditGoat(null);
+                                    reset(emptyFormValues);
+                                }}
+                                className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={
+                                    createGoat.isPending ||
+                                    updateGoat.isPending ||
+                                    isSubmitting
+                                }
+                                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold shadow-sm disabled:opacity-50 transition-colors cursor-pointer"
+                            >
+                                {editGoat
+                                    ? (updateGoat.isPending ? "Updating..." : "Update Animal")
+                                    : (createGoat.isPending ? "Saving..." : "Save Animal")
+                                }
+                            </button>
                         </div>
-                    </div>
-                    {/* <p className="mt-2 text-xs text-gray-500">
-                        Example: 0 years 8 months = animal is less than 1 year old.
-                    </p> */}
-                    {/* Type */}
-                    <div className="flex flex-col justify-center p-1">
-                        <label htmlFor="type" className="font-medium">Type *</label>
-                        <select
-                            id="type"
-                            {...register('type', { required: 'Type is required' })}
-                            className={`border ${errors.type ? 'border-red-500' : 'border-gray-300'} rounded-md p-2`}
-                        >
-                            <option value="">Select type</option>
-                            <option value="buk">Buk</option>
-                            <option value="wether">Wether</option>
-                            <option value="doe">Doe</option>
-                        </select>
-                        {errors.type && (
-                            <span className="text-red-500 text-xs mt-1">{errors.type.message}</span>
-                        )}
-                    </div>
-
-                    {/* Kidding Capacity */}
-                    <div className="flex flex-col justify-center p-1">
-                        <label htmlFor="kiddingCapacity" className="font-medium">Kidding Capacity {gender === 'Female' ? '*' : ''}</label>
-                        <select
-                            id="kiddingCapacity"
-                            {...register('kiddingCapacity', {
-                                required: gender === 'Female' ? 'Kidding capacity is required for females' : false
-                            })}
-                            disabled={gender !== "Female"}
-                            className={`border ${errors.kiddingCapacity ? 'border-red-500' : 'border-gray-300'} rounded-md p-2 disabled:bg-gray-200`}
-                        >
-                            <option value="">Select Kidding Capacity</option>
-                            <option value="1">1</option>
-                            <option value="2">2</option>
-                            <option value="3">3</option>
-                            <option value="4">4</option>
-                            <option value="5">5</option>
-                        </select>
-                        {errors.kiddingCapacity && (
-                            <span className="text-red-500 text-xs mt-1">{errors.kiddingCapacity.message}</span>
-                        )}
-                    </div>
-
-                    {/* Tag ID */}
-                    <div className="flex flex-col justify-center p-1">
-                        <label htmlFor="tagId" className="font-medium">Tag ID *</label>
-                        <input
-                            id="tagId"
-                            type="number"
-                            {...register('tagId', {
-                                required: 'Tag ID is required',
-                                pattern: {
-                                    value: /^[0-9]+$/,
-                                    message: 'Tag ID must be a number'
-                                }
-                            })}
-                            className={`border ${errors.tagId ? 'border-red-500' : 'border-gray-300'} rounded-md p-2`}
-                            placeholder="Tag ID"
-                        />
-                        {errors.tagId && (
-                            <span className="text-red-500 text-xs mt-1">{errors.tagId.message}</span>
-                        )}
-                    </div>
-
-                    {/* Weight */}
-                    <div className="flex flex-col justify-center p-1">
-                        <label htmlFor="weight" className="font-medium">Weight KG *</label>
-                        <input
-                            id="weight"
-                            type="number"
-                            step="0.1"
-                            {...register('weight', {
-                                required: 'Weight is required',
-                                min: { value: 0.1, message: 'Weight must be greater than 0' }
-                            })}
-                            className={`border ${errors.weight ? 'border-red-500' : 'border-gray-300'} rounded-md p-2`}
-                            placeholder="Weight KG"
-                        />
-                        {errors.weight && (
-                            <span className="text-red-500 text-xs mt-1">{errors.weight.message}</span>
-                        )}
-                    </div>
-
-                    {/* Breed Type */}
-                    <div className="flex flex-col justify-center p-1">
-                        <label htmlFor="breedType" className="font-medium">Breed Type *</label>
-                        <select
-                            id="breedType"
-                            {...register('breedType', { required: 'Breed type is required' })}
-                            className={`border ${errors.breedType ? 'border-red-500' : 'border-gray-300'} rounded-md p-2`}
-                        >
-                            <option value="">Select Breed Type</option>
-                            <option value="Beetal">Beetal</option>
-                            <option value="Teddy">Teddy</option>
-                            <option value="Nachi">Nachi</option>
-                            <option value="Dera Din Panah (DDP)">Dera Din Panah (DDP)</option>
-                            <option value="Barbari">Barbari</option>
-                            <option value="Pothwari/Potohari">Pothwari/Potohari</option>
-                            <option value="Hairy/Kajli">Hairy/Kajli</option>
-                        </select>
-                        {errors.breedType && (
-                            <span className="text-red-500 text-xs mt-1">{errors.breedType.message}</span>
-                        )}
-                    </div>
-                    {/* Mother ID */}
-                    <div className="flex flex-col justify-center p-1">
-                        <label htmlFor="motherId" className="font-medium">Mother ID {purchaseType === 'own' ? '*' : ''}</label>
-                        <select
-                            className={`
-                                border rounded-md p-2
-                                ${errors.motherId ? 'border-red-500' : 'border-gray-300'}
-                                ${purchaseType !== 'own' ? 'bg-gray-200 cursor-not-allowed' : ''}
-                            `}
-                            disabled={purchaseType !== "own"}
-                            {...register("motherId", {
-                                required:
-                                    purchaseType === "own"
-                                        ? "Mother ID is required"
-                                        : false,
-                                validate: (value) => {
-                                    if (purchaseType !== "own") return true;
-                                    return validateParentForm(
-                                        value,
-                                        "mother",
-                                        goats?.data || [],
-                                        watch("tagId")
-                                    );
-                                }
-                            })}
-                        >
-                            <option value="">{purchaseType === 'own' ? 'Select Mother' : '-'}</option>
-                            {motherSuggestions.map((g: any) => (
-                                <option key={g.tagId} value={g.tagId}>
-                                    {g.tagId}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-
-                    {/* Father ID */}
-                    <div className="flex flex-col justify-center">
-                        <label htmlFor="fatherId" className="font-medium">Father ID {purchaseType === 'own' ? '*' : ''}</label>
-                        {/* <option value="">Select Father</option> */}
-                        <select
-                            className={`
-    border rounded-md p-2
-    ${errors.fatherId ? 'border-red-500' : 'border-gray-300'}
-    ${purchaseType !== 'own' ? 'bg-gray-200 cursor-not-allowed' : ''}
-`}
-                            disabled={purchaseType !== "own"}
-
-                            {...register("fatherId", {
-                                required:
-                                    purchaseType === "own"
-                                        ? "Father ID is required"
-                                        : false,
-                                validate: (value) => {
-                                    if (purchaseType !== "own") return true;
-
-                                    return validateParentForm(
-                                        value,
-                                        "father",
-                                        goats?.data || [],
-                                        watch("tagId")
-                                    );
-                                }
-                            })}
-                        >
-                            <option value="">{purchaseType === 'own' ? 'Select Father' : '-'}</option>
-                            {fatherSuggestions.map((g: any) => (
-                                <option key={g.tagId} value={g.tagId}>
-                                    {g.tagId}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-
-                    {/* Partition */}
-                    <div className="flex flex-col justify-center p-1">
-                        <label htmlFor="partition">Partition</label>
-                        <input
-                            id="partition"
-                            type="text"
-                            {...register('partition')}
-                            className="border border-gray-300 rounded-md p-2"
-                            placeholder="Partition"
-                        />
-                    </div>
-
-                    {/* Site */}
-                    <div className="flex flex-col justify-center p-1">
-                        <label htmlFor="site">Site</label>
-                        <input
-                            id="site"
-                            type="text"
-                            {...register('site')}
-                            className="border border-gray-300 rounded-md p-2"
-                            placeholder="Site"
-                        />
-                    </div>
-
-                    {/* Purchase Price */}
-                    <div className="flex flex-col justify-center p-1">
-                        <label className="font-medium">Purchase Price {purchaseType === 'purchase' ? '*' : ''}</label>
-                        <input
-                            type="number"
-                            {...register('purchasePrice', {
-                                required: purchaseType === 'purchase' ? 'Purchase price is required' : false,
-                            })}
-                            disabled={purchaseType === "own"}
-                            className={`border ${errors.purchasePrice ? 'border-red-500' : 'border-gray-300'} rounded-md p-2 disabled:bg-gray-200`}
-                            placeholder="Purchase Price"
-                        />
-
-                        {errors.purchasePrice && (
-                            <span className="text-red-500 text-xs mt-1">
-                                {errors.purchasePrice.message}
-                            </span>
-                        )}
-                    </div>
-
-                    {/* Purchase From */}
-                    <div className="flex flex-col justify-center p-1">
-                        <label htmlFor="purchaseFrom" className="font-medium">Purchase From {purchaseType === 'purchase' ? '*' : ''}</label>
-                        <input
-                            disabled={purchaseType === "own"}
-                            id="purchaseFrom"
-                            type="text"
-                            {...register('purchaseFrom', {
-                                required: purchaseType === 'purchase' ? 'Seller name is required' : false
-                            })}
-                            className={`border ${errors.purchaseFrom ? 'border-red-500' : 'border-gray-300'} rounded-md p-2 disabled:bg-gray-200`}
-                            placeholder="Purchase From"
-                        />
-                        {errors.purchaseFrom && (
-                            <span className="text-red-500 text-xs mt-1">{errors.purchaseFrom.message}</span>
-                        )}
-                    </div>
-                    <button
-                        type="submit"
-                        disabled={
-                            createGoat.isPending ||
-                            updateGoat.isPending ||
-                            isSubmitting
-                        }
-                        className="mt-4 bg-blue-500 w-full md:w-1/2 md:col-span-2 mx-auto hover:bg-blue-600 text-white p-3 rounded-md font-medium disabled:opacity-50"
-                    >
-                        {editGoat
-                            ? (updateGoat.isPending ? "Updating..." : "Update")
-                            : (createGoat.isPending ? "Saving..." : "Save")
-                        }
-                    </button>
+                    </form>
                 </div>
-
-            </form>
             )}
             <div className="mx-2 mt-4 bg-white w-full">
                 <div className="flex flex-col sm:flex-row gap-3 m-2 rounded-md p-4 sm:p-8 w-full sm:w-auto">

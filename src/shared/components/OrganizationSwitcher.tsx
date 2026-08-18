@@ -3,25 +3,26 @@ import { useDispatch, useSelector } from 'react-redux';
 import { setCurrentOrganization, type OrganizationInfo } from '../../store/organization/organizationSlice';
 import type { RootState, AppDispatch } from '../../store/store';
 
+import { useQueryClient } from '@tanstack/react-query';
+
 export default function OrganizationSwitcher() {
     const dispatch = useDispatch<AppDispatch>();
+    const queryClient = useQueryClient();
     const { user } = useSelector((state: RootState) => state.auth);
     const { currentOrganization } = useSelector((state: RootState) => state.organization);
 
-    // Mock initial list of farm organisations for the Super Owner (or pulled from user)
-    const mockFarms: OrganizationInfo[] = user?.accessibleOrganizations?.map(org => ({
-        id: org.id,
-        name: org.name,
+    const farms: OrganizationInfo[] = user?.accessibleOrganizations?.map((org: any) => ({
+        id: org.id || org._id,
+        name: org.name || org.organisationName || 'Main Goat Farm',
     })) || [
-            { id: user?.orgId || 'org_1', name: 'Main Goat Farm (Primary)' },
-            { id: 'org_2', name: 'West Pasture Farm (Branch B)' },
-            { id: 'org_3', name: 'Valley Breeding Center' },
-        ];
+        { id: user?.orgId || 'org_1', name: user?.orgName || 'Main Goat Farm (Primary)' }
+    ];
 
-    const activeOrg = currentOrganization || mockFarms[0];
+    const activeOrg = currentOrganization || farms[0];
 
     const handleSelectOrg = (farm: OrganizationInfo) => {
         dispatch(setCurrentOrganization(farm));
+        queryClient.invalidateQueries({ queryKey: ["goats"] });
     };
 
     return (
@@ -31,13 +32,13 @@ export default function OrganizationSwitcher() {
             </label>
             <select
                 className="w-full text-xs font-semibold bg-stone-900/80 text-amber-100 border border-amber-500/40 rounded px-2 py-1.5 outline-none focus:ring-2 focus:ring-amber-400 cursor-pointer"
-                value={activeOrg.id}
+                value={activeOrg?.id || ''}
                 onChange={(e) => {
-                    const selected = mockFarms.find(f => f.id === e.target.value);
+                    const selected = farms.find(f => f.id === e.target.value);
                     if (selected) handleSelectOrg(selected);
                 }}
             >
-                {mockFarms.map((farm) => (
+                {farms.map((farm) => (
                     <option key={farm.id} value={farm.id} className="bg-stone-800 text-white">
                         {farm.name}
                     </option>

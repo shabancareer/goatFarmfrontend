@@ -14,6 +14,11 @@ export const authService = {
         return res.data;
     },
 
+    verifyEmail: async (token: string) => {
+        const res = await api.post('/auth/verify-email', { token });
+        return res.data;
+    },
+
     logout: async (): Promise<void> => {
         await api.post('/auth/logout');
     },

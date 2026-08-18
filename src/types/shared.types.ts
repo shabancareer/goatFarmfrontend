@@ -63,6 +63,7 @@ export interface User {
     isSuperOwner: boolean;
     isActive: boolean;
     orgId: string;
+    orgName?: string;
     accessibleOrganizations?: Organisation[];
     phone: string | null;
     photoUrl: string | null;

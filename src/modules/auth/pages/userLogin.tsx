@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 import { login } from '../../../store/thunks/auth/auth.thunks';
 import type { AppDispatch, RootState } from '../../../store/store';
 import { clearError } from '../../../store/slices/auth/auth.slice';
+import { authService } from '../services/authService';
 import d1 from '../../../assets/goatsImgs/d-1.jpg';
 
 // ---- Small inline icons ----
@@ -77,9 +78,24 @@ export const UserLogin: React.FC = () => {
     const [isVerifiedNotice, setIsVerifiedNotice] = useState(false);
 
     useEffect(() => {
-        if (searchParams.get('verified') === 'true') {
+        const token = searchParams.get('token');
+        const verified = searchParams.get('verified');
+        const errParam = searchParams.get('error');
+
+        if (token) {
+            authService.verifyEmail(token)
+                .then(() => {
+                    setIsVerifiedNotice(true);
+                    toast.success('Email verified successfully! Please log in.');
+                })
+                .catch(() => {
+                    toast.error('Invalid or expired email verification token.');
+                });
+        } else if (verified === 'true') {
             setIsVerifiedNotice(true);
             toast.success('Email verified successfully! Please log in.');
+        } else if (errParam === 'invalid_token') {
+            toast.error('Invalid or expired email verification token.');
         }
     }, [searchParams]);
 
