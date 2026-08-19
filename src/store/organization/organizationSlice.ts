@@ -14,8 +14,17 @@ interface OrganizationState {
   error: string | null;
 }
 
+const getSavedOrganization = (): OrganizationInfo | null => {
+  try {
+    const saved = localStorage.getItem('activeOrganization');
+    return saved ? JSON.parse(saved) : null;
+  } catch {
+    return null;
+  }
+};
+
 const initialState: OrganizationState = {
-  currentOrganization: null,
+  currentOrganization: getSavedOrganization(),
   organizations: [],
   status: 'idle',
   error: null,
@@ -27,6 +36,11 @@ const organizationSlice = createSlice({
   reducers: {
     setCurrentOrganization(state, action: PayloadAction<OrganizationInfo | null>) {
       state.currentOrganization = action.payload;
+      if (action.payload) {
+        localStorage.setItem('activeOrganization', JSON.stringify(action.payload));
+      } else {
+        localStorage.removeItem('activeOrganization');
+      }
     },
     setOrganizations(state, action: PayloadAction<OrganizationInfo[]>) {
       state.organizations = action.payload;
@@ -36,6 +50,7 @@ const organizationSlice = createSlice({
       state.organizations = [];
       state.status = 'idle';
       state.error = null;
+      localStorage.removeItem('activeOrganization');
     },
   },
 });

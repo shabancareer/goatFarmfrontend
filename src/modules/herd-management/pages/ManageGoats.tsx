@@ -10,6 +10,7 @@ export default function ManageGoats() {
             {/* <button onClick={() => dispatch(increment())}>Increment</button> */}
             {/* <button onClick={() => dispatch(decrement())}>Decrement</button> */}
             {/* <p>{count}</p> */}
+            <h2>Manage Goats</h2>
         </div>
     )
 }

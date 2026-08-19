@@ -236,7 +236,6 @@ const AddAnimalForm = () => {
         return true;
     };
 
-
     const purchaseType = useWatch({ control, name: "purchaseType" });
     const gender = useWatch({ control, name: "gender" });
     const currentTagId = useWatch({ control, name: "tagId" });
@@ -296,7 +295,7 @@ const AddAnimalForm = () => {
             goats?.data || [],
             currentTagId
         );
-    }, [goats?.data, purchaseType, currentTagId]);    const { user } = useSelector((state: RootState) => state.auth);
+    }, [goats?.data, purchaseType, currentTagId]); const { user } = useSelector((state: RootState) => state.auth);
     const { currentOrganization } = useSelector((state: RootState) => state.organization);
 
     const userOrgs = useMemo(() => {
@@ -585,8 +584,6 @@ const AddAnimalForm = () => {
             },
         },
     ], [handleEdit, deleteGoat]);
-
-
 
     const table = useReactTable({
         data: tableData,

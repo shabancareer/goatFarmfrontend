@@ -1,5 +1,5 @@
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from 'recharts';
-import { RechartsDevtools } from '@recharts/devtools';
+// import { RechartsDevtools } from '@recharts/devtools';
 
 export default function SickGoats() {
     const data = [
@@ -40,7 +40,7 @@ export default function SickGoats() {
                         stroke: 'var(--color-surface-base)',
                     }}
                 />
-                <RechartsDevtools />
+                {/* <RechartsDevtools /> */}
             </LineChart>
         </div>
     );
